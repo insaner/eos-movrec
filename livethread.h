@@ -68,11 +68,14 @@ public:
 	void stopWrite();
 	bool writeEnabled() { return WriteMovie; }
 	void setFileName(const char* fname);
+	void setVidFileName(const char* fname);	// NOTE: insaner added
+	void setImgFileName(const char* fname);	// NOTE: insaner added
 	void setBufferSize(int);
 	void setUseStabFPS(bool s);
 	void setTimeTimer(int timer);
 	void setFramesTimer(int timer);
 	void setMovieInfo(const char* info);
+	void cmdDoCPT(); 			// NOTE: insaner added
 	void cmdSetAEMode(int ae);
 	void cmdSetWB(int wb, int temp);
 	void cmdSetISO(int iso);
@@ -161,6 +164,8 @@ private:
 	QWidget* CaptureWnd;
 	bool WriteMovie;
 	char* FileName;
+	char* vidFileName;	// NOTE: insaner added
+	char* imgFileName;	// NOTE: insaner added
 	int BufferSize;
 	double StableFPS;
 	QMutex CommandMutex;

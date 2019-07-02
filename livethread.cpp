@@ -39,6 +39,8 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <fcntl.h>  // NOTE: insaner added
+
 static QMutex ImageMutex;
 
 #ifdef EDSDK
@@ -80,6 +82,8 @@ GMyLiveThread::GMyLiveThread(QWidget* owner)
 	DuplicatedCount = 0;
 	ElapsedTime = 0;
 	FileName = strdup("out.avi");
+	vidFileName = strdup("vid_out.avi");	// NOTE: insaner added
+	imgFileName = strdup("img_out.jpg");	// NOTE: insaner added
 	BufferSize = 1024*1024;
 	UseStabFPS = true;
 	StableFPS = 0.0;
@@ -92,6 +96,8 @@ GMyLiveThread::GMyLiveThread(QWidget* owner)
 GMyLiveThread::~GMyLiveThread()
 {
 	free(FileName);
+	free(vidFileName);	// NOTE: insaner added
+	free(imgFileName);	// NOTE: insaner added
 }
 
 void GMyLiveThread::setFileName(const char* fname)
@@ -100,6 +106,20 @@ void GMyLiveThread::setFileName(const char* fname)
 		free(FileName);
 	FileName = strdup(fname);
 }
+
+void GMyLiveThread::setVidFileName(const char* fname)		// NOTE: insaner added
+{
+	if (vidFileName)
+		free(vidFileName);
+	vidFileName = strdup(fname);
+}
+void GMyLiveThread::setImgFileName(const char* fname)		// NOTE: insaner added
+{
+	if (imgFileName)
+		free(imgFileName);
+	imgFileName = strdup(fname);
+}
+
 
 void GMyLiveThread::setBufferSize(int buffer_sz)
 {
@@ -151,6 +171,14 @@ void GMyLiveThread::stopWrite()
 	WrtFlagMutex.lock();
 	WriteMovie = false;
 	WrtFlagMutex.unlock();
+}
+
+void GMyLiveThread::cmdDoCPT() // NOTE: insaner added
+{
+	CommandMutex.lock();
+	GCameraCommand cmd(COMMAND_DO_CPT, 0, 0);
+	CommandsQueue.append(cmd);
+	CommandMutex.unlock();
 }
 
 void GMyLiveThread::cmdSetAEMode(int ae)
@@ -325,6 +353,24 @@ bool GMyLiveThread::processCommand()
 #endif
 	switch (cmd.command())
 	{
+	case COMMAND_DO_CPT:		// NOTE: insaner added
+		{
+				// NOTE: no exif data yet
+		FILE *jpgfile;
+		if (imgFileName != "")
+			{jpgfile = fopen(imgFileName,  "wb");}
+		
+		 if (jpgfile == NULL) {
+		 	fprintf(stderr, "Error: could not save image: [%s] \n", imgFileName);
+		 	}
+		 else {
+			fwrite(live_buffer::frame, live_buffer::frame_size, 1, jpgfile);
+			fclose(jpgfile);
+			fprintf(stderr, "Saved image: [%s]\n", imgFileName);
+			}
+		}
+		break;
+			// END added by insaner
 	case COMMAND_SET_WB:		// set WB
 #ifdef EDSDK
 		err = EdsSetPropertyData(camera, kEdsPropID_Evf_WhiteBalance, 0, sizeof(EdsInt32), &param1);
@@ -870,7 +916,11 @@ void GMyLiveThread::run()
 			OSProcessMsg();
 #endif
 #if GPHOTO2
-			gp2_camera_check_event();
+			if (!gp2_camera_check_event()) { // NOTE: camera has been disconnected / turned off
+				QApplication::postEvent(Owner, new GCameraEvent(CAMERA_EVENT_SHUTDOWN));
+				break;
+				}
+
 #endif
 			SDKMsgCheckTime1 = SDKMsgCheckTime2;
 		}
@@ -2354,19 +2404,19 @@ int GMyLiveThread::gp2_camera_check_event()
 				fprintf(stderr, "unknown");
 				break;
 			case GP_EVENT_TIMEOUT:
-				//fprintf(stderr, "timeout");
+				fprintf(stderr, "timeout");
 				break;
 			case GP_EVENT_FILE_ADDED:
-				//fprintf(stderr, "file added");
+				fprintf(stderr, "file added");
 				break;
 			case GP_EVENT_FOLDER_ADDED:
-				//fprintf(stderr, "folder added");
+				fprintf(stderr, "folder added");
 				break;
 			case GP_EVENT_CAPTURE_COMPLETE:
-				//fprintf(stderr, "capture complete");
+				fprintf(stderr, "capture complete");
 				break;
 			default:
-				fprintf(stderr, "%d", event_type);
+				fprintf(stderr, "[%d]", event_type);
 				;
 			}
 			if (event_data)
@@ -2375,6 +2425,9 @@ int GMyLiveThread::gp2_camera_check_event()
 				free(event_data);
 			}
 			fprintf(stderr, "\n");
+		}
+		else {
+			return 0;
 		}
 	}
 }

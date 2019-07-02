@@ -61,6 +61,7 @@ set(eos_movrec_SRCS
 	os_api.c
 	afthread.cpp
 	histogramwnd.cpp
+	pathsdlg.cpp
 	optionsdlg.cpp
 )
 
@@ -72,6 +73,7 @@ endif(WIN32)
 set(eos_movrec_MOC_HEADERS
 	mainwnd.h
 	blinklabel.h
+	pathsdlg.h
 )
 
 # force use exceptions

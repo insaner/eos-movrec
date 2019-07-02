@@ -31,8 +31,8 @@ class QPushButton;
 class QToolButton;
 class QComboBox;
 class QSpinBox;
-class QLabel;
 class QSpinBox;
+class QLabel;
 class QStatusBar;
 
 class GMyLiveThread;
@@ -52,6 +52,8 @@ protected slots:
 	void slotSelFile();
 	void slotStart();
 	void slotStop();
+	void slotCPT(); // NOTE: insaner added
+	void slotSettings(); // NOTE: insaner added
 	//void slotStartTimeout();
 	//void slotWorkTimeout();
 	void slotAESelected(int ae_ind);
@@ -82,6 +84,7 @@ protected:
 	virtual void closeEvent(QCloseEvent* event);
 private:
 	QString giveNextName(const QString& path);
+	QString getNextfName(const QString& fName); // NOTE: insaner added
 	void shutdown();
 	void loadSettings();
 	void saveSettings();
@@ -90,8 +93,11 @@ private:
 	QBlinkLabel* blinkLabel;
 	QToolButton* reconnBtn;
 	QToolButton* selFileBtn;
+	QToolButton* selSettingsBtn; // NOTE: insaner added
 	QPushButton* startBtn;
 	QPushButton* stopBtn;
+	QPushButton* cptBtn; // NOTE: insaner added
+	QLabel* path_label; // NOTE: insaner added
 	QComboBox* AEModeBox;
 	QToolButton* dofBtn;
 	QComboBox* isoBox;
@@ -126,6 +132,8 @@ private:
 	struct GSavedSettings
 	{
 		QString Path;
+		QString VidName; // NOTE: INSANO added
+		QString ImgName; // NOTE: INSANO added
 		int Av;
 		int Tv;
 		int ISO;
@@ -139,6 +147,8 @@ private:
 	};
 	struct GSavedSettings CurrSettings;
 	struct GSavedSettings BackupSettings;
+	
+	void wheelEvent(QWheelEvent* event);
 };
 
 #endif	// _mainwnd_h
