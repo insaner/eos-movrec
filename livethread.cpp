@@ -703,6 +703,8 @@ bool GMyLiveThread::processCommand()
 		{
 #ifdef EDSDK
 			EdsEvfAFMode mode = (EdsEvfAFMode)param1;
+			// first try to turn off AF
+			err = EdsSendCommand(camera, kEdsCameraCommand_DoEvfAf, kEdsCameraCommand_EvfAf_OFF);
 			err = EdsSendCommand(camera, kEdsCameraCommand_DoEvfAf, mode);
 #endif
 #ifdef GPHOTO2
