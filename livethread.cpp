@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <fcntl.h>  // NOTE: insaner added
+#include <fcntl.h>
 
 static QMutex ImageMutex;
 
@@ -82,8 +82,8 @@ GMyLiveThread::GMyLiveThread(QWidget* owner)
 	DuplicatedCount = 0;
 	ElapsedTime = 0;
 	FileName = strdup("out.avi");
-	vidFileName = strdup("vid_out.avi");	// NOTE: insaner added
-	imgFileName = strdup("img_out.jpg");	// NOTE: insaner added
+	vidFileName = strdup("vid_out.avi");
+	imgFileName = strdup("img_out.jpg");
 	BufferSize = 1024*1024;
 	UseStabFPS = true;
 	StableFPS = 0.0;
@@ -96,8 +96,8 @@ GMyLiveThread::GMyLiveThread(QWidget* owner)
 GMyLiveThread::~GMyLiveThread()
 {
 	free(FileName);
-	free(vidFileName);	// NOTE: insaner added
-	free(imgFileName);	// NOTE: insaner added
+	free(vidFileName);
+	free(imgFileName);
 }
 
 void GMyLiveThread::setFileName(const char* fname)
@@ -107,13 +107,13 @@ void GMyLiveThread::setFileName(const char* fname)
 	FileName = strdup(fname);
 }
 
-void GMyLiveThread::setVidFileName(const char* fname)		// NOTE: insaner added
+void GMyLiveThread::setVidFileName(const char* fname)
 {
 	if (vidFileName)
 		free(vidFileName);
 	vidFileName = strdup(fname);
 }
-void GMyLiveThread::setImgFileName(const char* fname)		// NOTE: insaner added
+void GMyLiveThread::setImgFileName(const char* fname)
 {
 	if (imgFileName)
 		free(imgFileName);
@@ -173,7 +173,7 @@ void GMyLiveThread::stopWrite()
 	WrtFlagMutex.unlock();
 }
 
-void GMyLiveThread::cmdDoCPT() // NOTE: insaner added
+void GMyLiveThread::cmdDoCPT()
 {
 	CommandMutex.lock();
 	GCameraCommand cmd(COMMAND_DO_CPT, 0, 0);
@@ -353,7 +353,7 @@ bool GMyLiveThread::processCommand()
 #endif
 	switch (cmd.command())
 	{
-	case COMMAND_DO_CPT:		// NOTE: insaner added
+	case COMMAND_DO_CPT:
 		{
 				// NOTE: no exif data yet
 		FILE *jpgfile;
@@ -370,7 +370,6 @@ bool GMyLiveThread::processCommand()
 			}
 		}
 		break;
-			// END added by insaner
 	case COMMAND_SET_WB:		// set WB
 #ifdef EDSDK
 		err = EdsSetPropertyData(camera, kEdsPropID_Evf_WhiteBalance, 0, sizeof(EdsInt32), &param1);

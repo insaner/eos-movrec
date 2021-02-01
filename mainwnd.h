@@ -47,13 +47,15 @@ class GEOSRecWnd: public QWidget
 public:
 	GEOSRecWnd();
 	~GEOSRecWnd();
+	void signal_handler(int s);
+	void close_app();
 protected slots:
 	void slotReconnect();
 	void slotSelFile();
 	void slotStart();
 	void slotStop();
-	void slotCPT(); // NOTE: insaner added
-	void slotSettings(); // NOTE: insaner added
+	void slotCPT();
+	void slotSettings();
 	//void slotStartTimeout();
 	//void slotWorkTimeout();
 	void slotAESelected(int ae_ind);
@@ -84,7 +86,7 @@ protected:
 	virtual void closeEvent(QCloseEvent* event);
 private:
 	QString giveNextName(const QString& path);
-	QString getNextfName(const QString& fName); // NOTE: insaner added
+	QString getNextfName(const QString& fName);
 	void shutdown();
 	void loadSettings();
 	void saveSettings();
@@ -93,11 +95,11 @@ private:
 	QBlinkLabel* blinkLabel;
 	QToolButton* reconnBtn;
 	QToolButton* selFileBtn;
-	QToolButton* selSettingsBtn; // NOTE: insaner added
+	QToolButton* selSettingsBtn;
 	QPushButton* startBtn;
 	QPushButton* stopBtn;
-	QPushButton* cptBtn; // NOTE: insaner added
-	QLabel* path_label; // NOTE: insaner added
+	QPushButton* cptBtn;
+	QLabel* path_label;
 	QComboBox* AEModeBox;
 	QToolButton* dofBtn;
 	QComboBox* isoBox;
@@ -132,8 +134,8 @@ private:
 	struct GSavedSettings
 	{
 		QString Path;
-		QString VidName; // NOTE: INSANO added
-		QString ImgName; // NOTE: INSANO added
+		QString VidName;
+		QString ImgName;
 		int Av;
 		int Tv;
 		int ISO;

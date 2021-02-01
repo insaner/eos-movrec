@@ -326,7 +326,7 @@ GEOSRecWnd::GEOSRecWnd()
 	QShortcut* focusFar1Shortcut = new QShortcut(QKeySequence(Qt::Key_4), this);
 	QShortcut* focusFar2Shortcut = new QShortcut(QKeySequence(Qt::Key_5), this);
 	QShortcut* focusFar3Shortcut = new QShortcut(QKeySequence(Qt::Key_6), this);
-	QShortcut* CPTShortcut = new QShortcut(QKeySequence(Qt::Key_C), this); // NOTE: INSANO added
+	QShortcut* CPTShortcut = new QShortcut(QKeySequence(Qt::Key_C), this);
 	QShortcut* recordShortcut = new QShortcut(QKeySequence(Qt::Key_R), this);
 	QShortcut* stopShortcut = new QShortcut(QKeySequence(Qt::Key_S), this);
 	QShortcut* reconnectShortcut = new QShortcut(QKeySequence(Qt::Key_O), this);
@@ -339,7 +339,7 @@ GEOSRecWnd::GEOSRecWnd()
 	connect(reconnBtn, SIGNAL(clicked()), this, SLOT(slotReconnect()));
 	connect(startBtn, SIGNAL(clicked()), this, SLOT(slotStart()));
 	connect(stopBtn, SIGNAL(clicked()), this, SLOT(slotStop()));
-	connect(cptBtn, SIGNAL(clicked()), this, SLOT(slotCPT())); // NOTE: INSANO added
+	connect(cptBtn, SIGNAL(clicked()), this, SLOT(slotCPT()));
 	connect(AEModeBox, SIGNAL(activated(int)), this, SLOT(slotAESelected(int)));
 	connect(dofBtn, SIGNAL(clicked()), this, SLOT(slotDofPressed()));
 	connect(isoBox, SIGNAL(activated(int)), this, SLOT(slotISOSelected(int)));
@@ -367,7 +367,7 @@ GEOSRecWnd::GEOSRecWnd()
 	connect(focusFar1Shortcut, SIGNAL(activated()), this, SLOT(slotFocusFar1()));
 	connect(focusFar2Shortcut, SIGNAL(activated()), this, SLOT(slotFocusFar2()));
 	connect(focusFar3Shortcut, SIGNAL(activated()), this, SLOT(slotFocusFar3()));
-	connect(CPTShortcut, SIGNAL(activated()), this, SLOT(slotCPT())); // NOTE: INSANO added
+	connect(CPTShortcut, SIGNAL(activated()), this, SLOT(slotCPT()));
 	connect(recordShortcut, SIGNAL(activated()), this, SLOT(slotStart()));
 	connect(stopShortcut, SIGNAL(activated()), this, SLOT(slotStop()));
 	connect(reconnectShortcut, SIGNAL(activated()), this, SLOT(slotReconnect()));
@@ -379,8 +379,8 @@ GEOSRecWnd::GEOSRecWnd()
 	connect(framesTimerBox, SIGNAL(clicked(bool)), this, SLOT(slotFramesTimerSwitch(bool)));
 
 	CurrSettings.Path = tr("out.avi");
-	CurrSettings.VidName = tr("vid_out.avi"); // NOTE: INSANO added
-	CurrSettings.ImgName = tr("img_out.jpg"); // NOTE: INSANO added
+	CurrSettings.VidName = tr("vid_out.avi");
+	CurrSettings.ImgName = tr("img_out.jpg");
 	CurrSettings.Av = -1;
 	CurrSettings.Tv = -1;
 	CurrSettings.ISO = -1;
@@ -393,8 +393,8 @@ GEOSRecWnd::GEOSRecWnd()
 	CurrSettings.ShowWhiteBox = false;
 
 	BackupSettings.Path = CurrSettings.Path;
-	BackupSettings.VidName = CurrSettings.VidName; // NOTE: INSANO added
-	BackupSettings.ImgName = CurrSettings.ImgName; // NOTE: INSANO added
+	BackupSettings.VidName = CurrSettings.VidName;
+	BackupSettings.ImgName = CurrSettings.ImgName;
 	BackupSettings.Av = CurrSettings.Av;
 	BackupSettings.Tv = CurrSettings.Tv;
 	BackupSettings.ISO = CurrSettings.ISO;
@@ -428,8 +428,22 @@ GEOSRecWnd::~GEOSRecWnd()
 		delete StartTimer;*/
 }
 
+
+
+void GEOSRecWnd::signal_handler(int s){
+	printf("\nCaught signal %d\n",s);
+	close_app();
+	exit(1); 
+}
+
 void GEOSRecWnd::closeEvent(QCloseEvent* event)
 {
+	close_app();
+}
+
+void GEOSRecWnd::close_app()
+{
+	printf("** Closing app...\n");
 	// stop thread;
 	if (LiveThread)
 	{
@@ -566,8 +580,8 @@ void GEOSRecWnd::loadSettings()
 
 	QSettings settings(QSettings::UserScope, QString("eos_movrec"));
 	CurrSettings.Path = settings.value(QString("Path"), QVariant(QString("out.avi"))).toString();
-	CurrSettings.VidName = settings.value(QString("VidName"), QVariant(QString("vid_out.avi"))).toString(); // NOTE: INSANO added
-	CurrSettings.ImgName = settings.value(QString("ImgName"), QVariant(QString("cpt_out.jpg"))).toString(); // NOTE: INSANO added
+	CurrSettings.VidName = settings.value(QString("VidName"), QVariant(QString("vid_out.avi"))).toString();
+	CurrSettings.ImgName = settings.value(QString("ImgName"), QVariant(QString("cpt_out.jpg"))).toString();
 	int i;
 	int ae = settings.value(QString("AEMode"), QVariant((int)-1)).toInt();
 	for (i = 0; i < AEModeBox->count(); i++)
@@ -637,8 +651,8 @@ void GEOSRecWnd::saveSettings()
 	}
 	QSettings settings(QSettings::UserScope, QString("eos_movrec"));
 	settings.setValue(QString("Path"), QVariant(CurrSettings.Path));
-	settings.setValue(QString("VidName"), QVariant(CurrSettings.VidName)); // NOTE: INSANO added
-	settings.setValue(QString("ImgName"), QVariant(CurrSettings.ImgName)); // NOTE: INSANO added
+	settings.setValue(QString("VidName"), QVariant(CurrSettings.VidName));
+	settings.setValue(QString("ImgName"), QVariant(CurrSettings.ImgName));
 	settings.setValue(QString("AEMode"), QVariant(CurrSettings.AEMode));
 	settings.setValue(QString("Av"), QVariant(CurrSettings.Av));
 	settings.setValue(QString("Tv"), QVariant(CurrSettings.Tv));
@@ -680,7 +694,7 @@ void GEOSRecWnd::customEvent(QEvent* event)
 				CaptureWnd->setZoomPositionDivisor(largeSize.width()/lvSize.width(), largeSize.height()/lvSize.height());
 			selFileBtn->setEnabled(true);
 			//startBtn->setEnabled(true);
-			cptBtn->setEnabled(true); // NOTE: insaner added
+			cptBtn->setEnabled(true);
 			AEModeBox->setEnabled(true);
 			dofBtn->setEnabled(true);
 			zoom5xBtn->setEnabled(true);
@@ -1039,13 +1053,12 @@ fprintf(stderr, ":::slotSelFile\n");
 	if (!path.isNull() && !path.isEmpty())
 	{
 		CurrSettings.Path = path;
-			// NOTE: insaner added
 		// CurrSettings.VidName = ;
 		
 	}
 }
 
-void GEOSRecWnd::slotSettings()		// NOTE: insaner added
+void GEOSRecWnd::slotSettings()
 {
 fprintf(stderr, ":::slotSettings\n");
 	// ------------------------
@@ -1066,7 +1079,7 @@ fprintf(stderr, "slotSettings: ImgName: [%s]\n", CurrSettings.ImgName.toLatin1()
 	GPathsDlg dlg(this);
 	dlg.setOptions(CurrSettings.Path, CurrSettings.VidName, CurrSettings.ImgName);
 	if (dlg.exec() == QDialog::Accepted) {
-		// CurrSettings.Path = dlg.Path(); // NOTE: insaner uncomment this for prime time
+		// CurrSettings.Path = dlg.Path();
 		CurrSettings.VidName = dlg.getVidName();
 		CurrSettings.ImgName = dlg.getImgName();
  fprintf(stderr, "GEOSRecWnd::slotSettings: ACCEPTED: [%s, %s, %s]\n",
@@ -1085,7 +1098,7 @@ fprintf(stderr, "slotSettings: ImgName: [%s]\n", CurrSettings.ImgName.toLatin1()
 }
 
 
-void GEOSRecWnd::slotCPT()		// NOTE: insaner added
+void GEOSRecWnd::slotCPT()
 {
 	fprintf(stderr, "CPT!\n");
 	fprintf(stderr, "CPT! curpath: [%s]\n", CurrSettings.Path.toAscii().constData());
@@ -1133,7 +1146,7 @@ void GEOSRecWnd::slotStart()
 		showBox->setEnabled(false);
 		startBtn->setEnabled(false);
 		startBtn->setVisible(false);
-		cptBtn->setEnabled(true); // NOTE: insaner added
+		cptBtn->setEnabled(true);
 		stopBtn->setEnabled(true);
 		stopBtn->setVisible(true);
 		zoom5xBtn->setEnabled(false);
@@ -1452,7 +1465,7 @@ void GEOSRecWnd::shutdown()
 	stopBtn->setEnabled(false);
 	startBtn->setVisible(true);
 	stopBtn->setVisible(false);
-	// cptBtn->setEnabled(false); // NOTE: insaner added
+	// cptBtn->setEnabled(false);
 	selFileBtn->setEnabled(false);
 	reconnBtn->setEnabled(true);
 	AEModeBox->setEnabled(false);
@@ -1521,7 +1534,7 @@ void GEOSRecWnd::slotAbout()
 QString GEOSRecWnd::getNextfName(const QString& fName)
 {
 	QString retname = fName;
-	retname = "/home/insaner/CANON/mycanonjpeg.jpg";
+	retname = "/home/my_user/CANON/mycanonjpeg.jpg";
 	QString path = QFileInfo(retname).path().toAscii().constData();
 	QString base = QFileInfo(retname).completeBaseName().toAscii().constData();
 	QString ext  = QFileInfo(retname).suffix().toAscii().constData();
