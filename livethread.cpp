@@ -449,7 +449,8 @@ bool GMyLiveThread::processCommand()
 			err = EdsSetPropertyData(camera, kEdsPropID_Evf_DepthOfFieldPreview, 0, sizeof(EdsUInt32), &param2);
 #endif
 #ifdef GPHOTO2
-		#warning "COMMAND_SET_AV: set dof not implemented yet!"
+		if (err >= GP_OK)
+			err = _gp_set_config_value_string(camera, "depthoffield", param2 ? "1" : "0", camera_context);
 #endif
 		break;
 	case COMMAND_REQ_AV:		// request Av
@@ -1527,7 +1528,20 @@ bool GMyLiveThread::fillCameraName()
 	return err == EDS_ERR_OK;
 #endif
 #ifdef GPHOTO2
-	return false;
+		// this code imported from: canon_eos_planetmovie_recorder
+	CameraName.clear();
+	char* str_val = 0;
+	int err = _gp_get_config_value_string(camera, "cameramodel", &str_val, camera_context);
+	if (err >= GP_OK && str_val)
+	{
+		CameraName = QString(str_val);
+		fprintf(stderr, "CameraName: [%s]\n", str_val);
+	}
+	
+	if (str_val)
+		free(str_val);
+	// TODO: check EVF resolution & camera's autofocus feature.
+	return err >= GP_OK;
 #endif
 }
 
