@@ -818,7 +818,7 @@ void GMyLiveThread::run()
 	// Wait a camera
 	int RealyStartT1 = StartTime;
 	int RealyStartT2 = StartTime;
-	while (!LiveViewStarted && RealyStartT2 - RealyStartT1 < 4000)
+	while (!LiveViewStarted && RealyStartT2 - RealyStartT1 < 2000)
 	{
 		if (SDKMsgCheckTime2 - SDKMsgCheckTime1 > 100)
 		{
@@ -1612,6 +1612,7 @@ bool GMyLiveThread::deInitializeEds()
 #ifdef GPHOTO2
 bool GMyLiveThread::initializeGPhoto2()
 {
+	fprintf(stderr, "* NOTE * If you experience a crash or a hang, make sure the camera is not set to 'movie' mode, and LiveView is on.\n");
 	camera_context = gp_context_new();
 	if (!camera_context)
 		return false;
@@ -2406,6 +2407,7 @@ int GMyLiveThread::gp2_camera_check_event()
 				break;
 			case GP_EVENT_TIMEOUT:
 				fprintf(stderr, "timeout");
+				return 1;
 				break;
 			case GP_EVENT_FILE_ADDED:
 				fprintf(stderr, "file added");

@@ -671,19 +671,19 @@ void GEOSRecWnd::customEvent(QEvent* event)
 		return;
 	struct EOSCamFeatures features = LiveThread->cameraFeatures();
 	GCameraEvent* e = (GCameraEvent*)event;
-	switch (e->type())
+	switch (e->type())	// events.h
 	{
 	case CAMERA_EVENT_NOCAMERA:
 		shutdown();
 		blinkLabel->setText(tr("Camera not found/not supported/not connected!"));
 		blinkLabel->start();
-		QMessageBox::critical(this, tr("Error"), tr("Can't initialize your camera!\nCheck connection."));
+		QMessageBox::critical(this, tr("Error"), tr("Can't initialize your camera!\n\nCheck camera connection.\n\nYou might need to reconnect the USB cable or turn your camera off then back on again."));
 		break;
 	case CAMERA_EVENT_LV_NOTSTARTED:
 		shutdown();
 		blinkLabel->setText(tr("Can't initialize LiveView mode!"));
 		blinkLabel->start();
-		QMessageBox::critical(this, tr("Error"), tr("Can't initialize LiveView mode!\nMay be your camera not support this?"));
+		QMessageBox::critical(this, tr("Error"), tr("Can't initialize LiveView mode!\n\nDoes your camera support LiveView mode?"));
 		break;
 	case CAMERA_EVENT_LV_STARTED:
 		{
