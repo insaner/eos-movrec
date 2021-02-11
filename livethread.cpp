@@ -1565,7 +1565,72 @@ bool GMyLiveThread::fillCameraName()
 	if (err >= GP_OK && str_val)
 	{
 		CameraName = QString(str_val);
-		fprintf(stderr, "CameraName: [%s]\n", str_val);
+		fprintf(stderr, "CameraName: [%s]\n", CameraName.toLocal8Bit().constData());
+	}
+	
+	// gphoto2 --get-config focusinfo
+	err = _gp_get_config_value_string(camera, "focusinfo", &str_val, camera_context);
+	if (err >= GP_OK && str_val)
+	{
+		char *pch = strstr(str_val, "size=");
+		if (pch != NULL)
+		{
+			int sensor_w, sensor_h;
+			int c = sscanf(pch, "size=%dx%d", &CamFeatures.zoomVars.sensor_w, &CamFeatures.zoomVars.sensor_h);
+			if (c == 2)
+				fprintf(stderr, "Camera sensor dimensions: [%d, %d]\n", CamFeatures.zoomVars.sensor_w, CamFeatures.zoomVars.sensor_h);
+			else
+				fprintf(stderr, "Could not scan for camera sensor dimensions\n");
+		}
+	}
+	 
+	// TODO: check EVF resolution & camera's autofocus feature.
+	if (CameraName == "Canon EOS 600D" || CameraName == "Canon EOS REBEL T3i" || CameraName == "Canon EOS DIGITAL REBEL T3i")
+	{
+		CamFeatures.zoomVars.enabled = true;
+		if (!CamFeatures.zoomVars.sensor_w || !CamFeatures.zoomVars.sensor_h)
+		{
+			fprintf(stderr, "Could not scan for camera sensor dimensions\n");
+			CamFeatures.zoomVars.sensor_w = 5184;
+			CamFeatures.zoomVars.sensor_h = 3456;
+		}
+		CamFeatures.zoomVars.x_min = CamFeatures.zoomVars.sensor_w * .1;	// because the zoom box does not go all the way to the edge of the preview area
+		CamFeatures.zoomVars.x_max = CamFeatures.zoomVars.sensor_w * .9;
+		
+		CamFeatures.zoomVars.y_min = CamFeatures.zoomVars.sensor_h * .1;
+		CamFeatures.zoomVars.y_max = CamFeatures.zoomVars.sensor_h * .9;
+		//CamFeatures.JpegLargeSize_x = 4752;
+		//CamFeatures.JpegLargeSize_y = 3168;
+		//CamFeatures.LiveViewSize_x = 928;
+		//CamFeatures.LiveViewSize_y = 616;
+		CamFeatures.HasAF = true;
+	}
+	else // default values. You'll have to check these against your camera, and create an entry for it
+	{
+		fprintf(stderr, "Using default camera zoom settings.\n");
+		CamFeatures.zoomVars.enabled = false;
+		if (!CamFeatures.zoomVars.sensor_w || !CamFeatures.zoomVars.sensor_h)
+		{
+			CamFeatures.zoomVars.sensor_w = 5184;
+			CamFeatures.zoomVars.sensor_h = 3456;
+		}
+		CamFeatures.zoomVars.x_min = CamFeatures.zoomVars.sensor_w * .1;
+		CamFeatures.zoomVars.x_max = CamFeatures.zoomVars.sensor_w * .9;
+		
+		CamFeatures.zoomVars.y_min = CamFeatures.zoomVars.sensor_h * .1;
+		CamFeatures.zoomVars.y_max = CamFeatures.zoomVars.sensor_h * .9;
+		//CamFeatures.JpegLargeSize_x = 4752;
+		//CamFeatures.JpegLargeSize_y = 3168;
+		//CamFeatures.LiveViewSize_x = 928;
+		//CamFeatures.LiveViewSize_y = 616;
+		//CamFeatures.HasAF = true;
+	}
+	
+	err = _gp_get_config_value_string(camera, "lensname", &str_val, camera_context);
+	if (err >= GP_OK && str_val)
+	{
+		fprintf(stderr, "lens_name: [%s]\n", str_val);
+		CamFeatures.lens_name = QString(str_val);
 	}
 	
 	if (str_val)
@@ -2453,8 +2518,9 @@ int GMyLiveThread::gp2_camera_check_event()
 				fprintf(stderr, "unknown");
 				break;
 			case GP_EVENT_TIMEOUT:
-				fprintf(stderr, "timeout");
-				return 1;
+				// fprintf(stderr, "timeout");
+				// fprintf(stderr, "\n");
+				//return 1;
 				break;
 			case GP_EVENT_FILE_ADDED:
 				fprintf(stderr, "file added");

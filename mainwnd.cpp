@@ -131,7 +131,7 @@ GEOSRecWnd::GEOSRecWnd()
 
 	optionsBtn = new QToolButton(this);
 	optionsBtn->setText(tr("O"));
-		optionsBtn->setIcon(QIcon::fromTheme("configure"));
+	optionsBtn->setIcon(QIcon::fromTheme("configure"));
 	optionsBtn->setIconSize(QSize(16, 16));
 	optionsBtn->setToolTip(tr("Open camera options dialog"));
 	btn_layout->addWidget(optionsBtn, 0);
@@ -197,12 +197,28 @@ GEOSRecWnd::GEOSRecWnd()
 	focus_layout->addSpacing(10);
 
 	focus_layout->addWidget(new QLabel(tr("Zoom")));
+
+	zoomPosClickBtn = new QToolButton(this);
+	zoomPosClickBtn->setText(tr("*"));
+	zoomPosClickBtn->setEnabled(false);
+	zoomPosClickBtn->setCheckable(true);
+	zoomPosClickBtn->setToolTip(tr("Select zoom position by clicking on preview"));
+	zoomPosByClick = zoomPosClickBtn->isChecked();
+	focus_layout->addWidget(zoomPosClickBtn, 0);
+	
 	zoom5xBtn = new QToolButton(this);
 	zoom5xBtn->setText(tr("5x"));
 	zoom5xBtn->setEnabled(false);
 	zoom5xBtn->setCheckable(true);
 	zoom5xBtn->setToolTip(tr("5x Zoom (crop) (Z)"));
 	focus_layout->addWidget(zoom5xBtn, 0);
+
+	zoom10xBtn = new QToolButton(this);
+	zoom10xBtn->setText(tr("10x"));
+	zoom10xBtn->setEnabled(false);
+	zoom10xBtn->setCheckable(true);
+	zoom10xBtn->setToolTip(tr("10x Zoom (crop) (Z)"));
+	focus_layout->addWidget(zoom10xBtn, 0);
 
 	HistBtn = new QToolButton(this);
 	HistBtn->setText(tr("H"));
@@ -374,7 +390,9 @@ GEOSRecWnd::GEOSRecWnd()
 	connect(focusFar1Btn, SIGNAL(clicked()), this, SLOT(slotFocusFar1()));
 	connect(focusFar2Btn, SIGNAL(clicked()), this, SLOT(slotFocusFar2()));
 	connect(focusFar3Btn, SIGNAL(clicked()), this, SLOT(slotFocusFar3()));
+	connect(zoomPosClickBtn, SIGNAL(clicked()), this, SLOT(slotZoomPosClick()));
 	connect(zoom5xBtn, SIGNAL(clicked()), this, SLOT(slotZoom5x()));
+	connect(zoom10xBtn, SIGNAL(clicked()), this, SLOT(slotZoom10x()));
 	connect(AFBtn, SIGNAL(clicked()), this, SLOT(slotAutoFocus()));
 	connect(AFCamBtn, SIGNAL(clicked()), this, SLOT(slotCameraAF()));
 	connect(HistBtn, SIGNAL(clicked()), this, SLOT(slotHistogram()));
@@ -391,6 +409,7 @@ GEOSRecWnd::GEOSRecWnd()
 	connect(reconnectShortcut, SIGNAL(activated()), this, SLOT(slotReconnect()));
 	connect(dofShortcut, SIGNAL(activated()), dofBtn, SLOT(click()));
 	connect(zoomShortcut, SIGNAL(activated()), zoom5xBtn, SLOT(click()));
+	connect(zoomShortcut, SIGNAL(activated()), zoom10xBtn, SLOT(click()));
 	connect(captureShortcut, SIGNAL(activated()), showBox, SLOT(click()));
 
 	connect(timeTimerBox, SIGNAL(clicked(bool)), this, SLOT(slotTimeTimerSwitch(bool)));
@@ -513,6 +532,11 @@ void GEOSRecWnd::close_app()
 		delete HistogramWnd;
 		HistogramWnd = 0;
 	}
+}
+
+bool GEOSRecWnd::isLive()
+{
+	return (LiveThread);
 }
 
 /*void GEOSRecWnd::slotStartTimeout()
@@ -699,6 +723,17 @@ void GEOSRecWnd::saveSettings()
 	settings.setValue(QString("ShowWhiteBox"), QVariant(CurrSettings.ShowWhiteBox));
 }
 
+void GEOSRecWnd::resizeEvent(QResizeEvent* event)
+{
+	setPathLabel();
+	QWidget::resizeEvent(event);
+}
+
+EOSZoomVars GEOSRecWnd::getZoomVars()
+{
+	return LiveThread->cameraFeatures().zoomVars;
+}
+
 void GEOSRecWnd::customEvent(QEvent* event)
 {
 	if (!LiveThread /*|| !LiveThread->isInit()*/)
@@ -729,7 +764,12 @@ void GEOSRecWnd::customEvent(QEvent* event)
 			cptBtn->setEnabled(true);
 			AEModeBox->setEnabled(true);
 			dofBtn->setEnabled(true);
+			zoomPosClickBtn->setEnabled(true && getZoomVars().enabled);
+			if (!getZoomVars().enabled)
+				zoomPosClickBtn->setToolTip(tr("Select zoom position by clicking on preview (this feature not yet enabled for your camera)"));
 			zoom5xBtn->setEnabled(true);
+			zoom10xBtn->setEnabled(true);
+			zoomPosClickBtn->setEnabled(true);
 			HistBtn->setEnabled(true);
 			showBox->setEnabled(true);
 			wbBox->setEnabled(true);
@@ -738,6 +778,7 @@ void GEOSRecWnd::customEvent(QEvent* event)
 			blinkLabel->stop();
 			QString str = LiveThread->cameraName() + QString(": ");
 			blinkLabel->setText(str + tr("Ready"));
+			optionsBtn->setEnabled(true);
 			timeTimerBox->setEnabled(true);
 			framesTimerBox->setEnabled(true);
 			slotTimeTimerSwitch(timeTimerBox->isChecked());
@@ -759,7 +800,11 @@ void GEOSRecWnd::customEvent(QEvent* event)
 			startBtn->setVisible(true);
 			stopBtn->setEnabled(false);
 			stopBtn->setVisible(false);
+			zoomPosClickBtn->setEnabled(true && getZoomVars().enabled);
 			zoom5xBtn->setEnabled(true);
+			zoom10xBtn->setEnabled(true);
+			zoomPosClickBtn->setEnabled(true);
+			optionsBtn->setEnabled(true);
 			timeTimerBox->setEnabled(true);
 			framesTimerBox->setEnabled(true);
 			slotTimeTimerSwitch(timeTimerBox->isChecked());
@@ -1149,7 +1194,11 @@ fprintf(stderr, "GEOSRecWnd::slotStart: FIXME -- CHECK for no filename (error)\n
 		startBtn->setVisible(false);
 		stopBtn->setEnabled(true);
 		stopBtn->setVisible(true);
+		zoomPosClickBtn->setEnabled(false);
 		zoom5xBtn->setEnabled(false);
+		zoom10xBtn->setEnabled(false);
+		zoomPosClickBtn->setEnabled(false);
+		optionsBtn->setEnabled(false);
 		if (timeTimerBox->isChecked())
 			LiveThread->setTimeTimer(timeTimerSpinBox->value()*1000);
 		else
@@ -1340,14 +1389,42 @@ void GEOSRecWnd::slotFocusFar3()
 	}
 }
 
+void GEOSRecWnd::slotZoomPosClick()
+{
+	zoomPosByClick = zoomPosClickBtn->isChecked();
+}
+
 void GEOSRecWnd::slotZoom5x()
 {
 	int zoom = zoom5xBtn->isChecked() ? 5 : 1;
+	zoom10xBtn->setChecked(false);
+	doZoom(zoom);
+}
+
+void GEOSRecWnd::slotZoom10x()
+{
+	int zoom = zoom10xBtn->isChecked() ? 10 : 1;
+	zoom5xBtn->setChecked(false);
+	doZoom(zoom);
+}
+
+void GEOSRecWnd::doZoom(int amount)
+{
 	if (LiveThread && LiveThread->isInit())
 	{
-		LiveThread->cmdSetZoom(zoom);
+		LiveThread->cmdSetZoom(amount);
 	}
-	HistBtn->setEnabled(zoom == 1);
+	HistBtn->setEnabled(amount == 1);
+}
+
+void GEOSRecWnd::doZoomPos(QPoint qp)
+{
+	if (LiveThread && LiveThread->isInit())
+	{
+		// http://gphoto.10949.n7.nabble.com/Canon-EOS-1000D-Zoom-in-LiveView-Evf-td8940.html
+		// https://indilib.org/forum/ccds-dslrs/3686-poor-fps-when-streaming/33911.html?start=12
+		LiveThread->cmdSetZoomPos(qp);
+	}
 }
 
 void GEOSRecWnd::slotAutoFocus()
@@ -1480,7 +1557,10 @@ void GEOSRecWnd::shutdown()
 	focusFar2Btn->setEnabled(false);
 	focusFar3Btn->setEnabled(false);
 	zoom5xBtn->setEnabled(false);
+	zoom10xBtn->setEnabled(false);
+	zoomPosClickBtn->setEnabled(false);
 	AFBtn->setEnabled(false);
+	AFCamBtn->setEnabled(false);
 	HistBtn->setEnabled(false);
 	timeTimerBox->setEnabled(false);
 	framesTimerBox->setEnabled(false);

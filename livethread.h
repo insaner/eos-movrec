@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008-2010 by Чернов А.А.                                *
+ *   Copyright (C) 2008-2010 by пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ.пїЅ.                                *
  *   valexlin@gmail.com                                                    *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -47,13 +47,33 @@
 
 class QWidget;
 
+struct EOSZoomVars
+{
+	bool enabled;
+	unsigned int sensor_w;
+	unsigned int sensor_h;
+	unsigned int x_min;
+	unsigned int x_max;
+	unsigned int y_min;
+	unsigned int y_max;
+};
+
+struct valArr
+{
+	QString *opt_name;
+	int length = 0;
+};
+
 struct EOSCamFeatures
 {
 	unsigned int JpegLargeSize_x;
 	unsigned int JpegLargeSize_y;
 	unsigned int LiveViewSize_x;
 	unsigned int LiveViewSize_y;
+	EOSZoomVars zoomVars;
 	bool HasAF;
+	
+	QString lens_name;
 };
 
 class GMyLiveThread: public QThread

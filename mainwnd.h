@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008-2009 by Чернов А.А.                                *
+ *   Copyright (C) 2008-2009 by пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ.пїЅ.                                *
  *   valexlin@gmail.com                                                    *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -34,12 +34,15 @@ class QSpinBox;
 class QSpinBox;
 class QLabel;
 class QStatusBar;
+class QPoint;
 
 class GMyLiveThread;
 class GAFThread;
 class GEOSCaptureWnd;
 class QBlinkLabel;
 class GHistogramWnd;
+
+#include "livethread.h"	// to get the declaration for EOSZoomVars
 
 class GEOSRecWnd: public QWidget
 {
@@ -49,6 +52,9 @@ public:
 	~GEOSRecWnd();
 	void signal_handler(int s);
 	void close_app();
+	bool isLive();
+	bool zoomPosByClick;
+	EOSZoomVars getZoomVars();
 protected slots:
 	void slotReconnect();
 	void slotStart();
@@ -73,7 +79,9 @@ protected slots:
 	void slotFocusFar1();
 	void slotFocusFar2();
 	void slotFocusFar3();
+	void slotZoomPosClick();
 	void slotZoom5x();
+	void slotZoom10x();
 	void slotAutoFocus();
 	void slotStopAutoFocus();
 	void slotCameraAF();
@@ -85,6 +93,7 @@ protected:
 	void derivePath();
 	virtual void customEvent(QEvent* event);
 	virtual void closeEvent(QCloseEvent* event);
+    virtual void resizeEvent(QResizeEvent *event) override;
 private:
 	QString giveNextName(const QString& path);
 	QString getNextfName(const QString& fName);
@@ -93,6 +102,8 @@ private:
 	void loadSettings();
 	void saveSettingsFilepaths();
 	void saveSettings();
+	void doZoomPos(QPoint qp);
+	void doZoom(int amount);
 private:
 	//QTimer* StartTimer;
 	QBlinkLabel* blinkLabel;
@@ -117,7 +128,9 @@ private:
 	QToolButton* focusFar1Btn;
 	QToolButton* focusFar2Btn;
 	QToolButton* focusFar3Btn;
+	QToolButton* zoomPosClickBtn;
 	QToolButton* zoom5xBtn;
+	QToolButton* zoom10xBtn;
 	QToolButton* AFBtn;
 	QToolButton* AFCamBtn;
 	QToolButton* HistBtn;
