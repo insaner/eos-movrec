@@ -69,6 +69,7 @@ GMyLiveThread::GMyLiveThread(QWidget* owner)
 	camera = 0;
 #ifdef GPHOTO2
 	camera_context = 0;
+	CAF_blocked = false;
 #endif
 	isSDKLoaded = false;
 	WriteMovie = false;
@@ -317,12 +318,24 @@ void GMyLiveThread::cmdSetZoom(int zoom)
 	CommandMutex.unlock();
 }
 
-void GMyLiveThread::cmdSetZoomPos(int x, int y)
+void GMyLiveThread::cmdSetZoomPos(QPoint qp)
 {
 	CommandMutex.lock();
-	GCameraCommand cmd(COMMAND_SET_ZOOMPOS, x, y);
+				fprintf(stderr, " GMyLiveThread::cmdSetZoomPos - pos: [%d][%d]\n", qp.x(), qp.y());
+	GCameraCommand cmd(COMMAND_SET_ZOOMPOS, qp.x(), qp.y());
 	CommandsQueue.append(cmd);
 	CommandMutex.unlock();
+}
+
+void GMyLiveThread::cmdCancelCAF()
+{
+		// Needed so camera connection is not blocked after a CAF command
+				fprintf(stderr, " GMyLiveThread::cmdCancelAF\n");	
+	CommandMutex.lock();
+	GCameraCommand cmd(COMMAND_CANCEL_CAF, 0, 0);
+	CommandsQueue.append(cmd);
+	CommandMutex.unlock();
+	CAF_blocked = false;
 }
 
 void GMyLiveThread::cmdDoLVAF(int mode)
@@ -700,6 +713,13 @@ bool GMyLiveThread::processCommand()
 #endif
 		}
 		break;
+	case COMMAND_CANCEL_CAF:
+		{
+#ifdef GPHOTO2
+			err = _gp_set_config_value_string(camera, "cancelautofocus", "1", camera_context);
+#endif
+		}
+		break;
 	case COMMAND_DO_LVAF:
 		{
 #ifdef EDSDK
@@ -709,7 +729,9 @@ bool GMyLiveThread::processCommand()
 			err = EdsSendCommand(camera, kEdsCameraCommand_DoEvfAf, mode);
 #endif
 #ifdef GPHOTO2
-			#warning "COMMAND_DO_LVAF: not implemented yet!"
+			//err = _gp_set_config_value_string(camera, "eosremoterelease", "5", camera_context);
+			err = _gp_set_config_value_string(camera, "autofocusdrive", "1", camera_context);	// this blocks the connection if you don't do a "cancelautofocus"
+			CAF_blocked = true;
 #endif
 		}
 		break;
@@ -743,12 +765,15 @@ void GMyLiveThread::run()
 #endif
 	if (!ok)
 	{
+		fprintf(stderr, "error initializing photo lib\n");
 		if (Owner)
 			QApplication::postEvent(Owner, new GCameraEvent(CAMERA_EVENT_NOCAMERA));
 #ifdef EDSDK
+		fprintf(stderr, "deInitializeEds\n");
 		deInitializeEds();
 #endif
 #ifdef GPHOTO2
+		fprintf(stderr, "deInitializeGPhoto2\n");
 		deInitializeGPhoto2();
 #endif
 		return;
@@ -913,15 +938,19 @@ void GMyLiveThread::run()
 		CommandMutex.unlock();
 
 		// process internal EDSDK message queue
-		if (SDKMsgCheckTime2 - SDKMsgCheckTime1 > 500)
+		//if (SDKMsgCheckTime2 - SDKMsgCheckTime1 > 500)
+		if (SDKMsgCheckTime2 - SDKMsgCheckTime1 > 5)
 		{
 #ifdef EDSDK
 			OSProcessMsg();
 #endif
 #if GPHOTO2
-			if (!gp2_camera_check_event()) { // NOTE: camera has been disconnected / turned off
+		//fprintf(stderr, "GMyLiveThread::run()   gp2_camera_check_event()    [%d]  aka [%d][%d]\n", gp2_camera_check_event(), (gp2_camera_check_event() < GP_OK), !gp2_camera_check_event());
+		// gp2_camera_check_event();
+			if (gp2_camera_check_event() < GP_OK) { // NOTE: camera has been disconnected / turned off
+				fprintf(stderr, "camera has been disconnected\n");
 				QApplication::postEvent(Owner, new GCameraEvent(CAMERA_EVENT_SHUTDOWN));
-				break;
+				// break;
 				}
 
 #endif
@@ -1097,7 +1126,7 @@ void GMyLiveThread::run()
 				WorkSleep(1000*sleep_time);
 		}*/
 	}
-	// cleanup (при выходе из программы без остановки записи)
+	// cleanup (when exiting the program without stopping recording)
 	if (mjpeg)
 	{
 		WriteMovie = false;
@@ -1906,6 +1935,7 @@ bool GMyLiveThread::deInitializeGPhoto2()
 		//free(camera_context);
 		camera_context = 0;
 	}
+	return true;
 }
 #endif
 
@@ -2075,7 +2105,7 @@ bool GMyLiveThread::downloadEvfData()
 		// end of critical section!!!
 	}
 #if 0
-	// this code not work, libgphoto2 always get me zero.
+	// this code not work, libgphoto2 always get me zero & and this zero hardcoded in sources
 	char* str_val = 0;
 	int x, y, z, c;
 	ret = _gp_get_config_value_string(camera, "eoszoom", &str_val, camera_context);
@@ -2321,14 +2351,16 @@ void GMyLiveThread::propertyEvent(const char* prop_name)
 			free(str_val);
 #endif
 	}
-	/*else if (strncasecmp(prop_name, "", 4) == 0)	//
+	else if (strncasecmp(prop_name, "d1b7", 4) == 0)	// exposure light? -- not 100% sure
 	{
-		;
+		fprintf(stderr, "d1b7 - exposure light?\n"); // ptp.h: PTP_DPC_CANON_EOS_ExposureSimMode	0xD1b7
 	}
-	else if (strncasecmp(prop_name, "", 4) == 0)	//
+	else if (strncasecmp(prop_name, "d1c0", 4) == 0)	// autofocus complete? -- not 100% sure
 	{
-		;
-	}*/
+		fprintf(stderr, "d1c0 - autofocus complete?\n"); // ptp.h:  PTP_DPC_CANON_EOS_FlashChargingState	0xD1C0
+		if (CAF_blocked)
+			cmdCancelCAF();
+	}
 }
 #endif
 
@@ -2384,7 +2416,7 @@ int GMyLiveThread::gp2_camera_check_event()
 {
 	CameraEventType event_type = GP_EVENT_UNKNOWN;
 	char* event_data;
-	int ret;
+	int ret = GP_ERROR;
 	char prop_name[64];
 
 	prop_name[0] = 0;
@@ -2444,10 +2476,12 @@ int GMyLiveThread::gp2_camera_check_event()
 			}
 			fprintf(stderr, "\n");
 		}
-		else {
-			return 0;
+		else
+		{
+			return ret;
 		}
 	}
+	return ret;
 }
 
 static int _gp_lookup_widget(CameraWidget*widget, const char *key, CameraWidget **child)

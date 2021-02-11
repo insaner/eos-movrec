@@ -34,6 +34,7 @@
 #include <QSettings>
 #include <QShortcut>
 #include <QWheelEvent>
+#include <QIcon>
 
 
 #include <fcntl.h>
@@ -1020,8 +1021,8 @@ void GEOSRecWnd::customEvent(QEvent* event)
 				focusFar2Btn->setEnabled(false);
 				focusFar3Btn->setEnabled(false);
 				AFBtn->setEnabled(false);
-				slotStopAutoFocus();
 				AFCamBtn->setEnabled(false);
+				slotStopAutoFocus();
 				break;
 			default:
 				break;
@@ -1036,8 +1037,7 @@ void GEOSRecWnd::customEvent(QEvent* event)
 	case CAMERA_EVENT_ZOOMPOS_NEEDCHANGE:
 		if (LiveThread)
 		{
-			QPoint p = e->value().toPoint();
-			LiveThread->cmdSetZoomPos(p.x(), p.y());
+			LiveThread->cmdSetZoomPos(e->value().toPoint());
 		}
 		break;
 	case CAMERA_EVENT_AF_STOPPED:

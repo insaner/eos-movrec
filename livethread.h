@@ -33,6 +33,7 @@
 #include <QMutex>
 #include <QWaitCondition>
 #include <QSize>
+#include <QPoint>
 
 #include "command.h"
 #ifdef EDSDK
@@ -93,7 +94,8 @@ public:
 	void cmdRequestAFMode();
 	void cmdAdjFocus(int direction, int val);
 	void cmdSetZoom(int zoom);
-	void cmdSetZoomPos(int x, int y);
+	void cmdSetZoomPos(QPoint qp);
+	void cmdCancelCAF();
 	void cmdDoLVAF(int mode);
 	// wait for all commands
 	// call only from other threads!
@@ -150,6 +152,7 @@ private:
 	bool startLiveView();
 	bool downloadEvfData();
 	bool endLiveView();
+	int camera_auto_focus(Camera* camera, GPContext* context, int onoff);
 	bool processCommand();
 	bool fillAvList();
 	bool fillTvList();
@@ -182,6 +185,7 @@ private:
 #ifdef GPHOTO2
 	GPContext *camera_context;
 	Camera* camera;
+	bool CAF_blocked = false;
 #endif
 	unsigned int AvList[128];
 	int AvListSize;

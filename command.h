@@ -63,6 +63,7 @@ typedef QQueue<GCameraCommand> GCameraCommandsQueue;
 #define COMMAND_REQ_ISOLIST	17
 #define COMMAND_DO_LVAF		18
 #define COMMAND_DO_CPT		19
+#define COMMAND_CANCEL_CAF	20
 
 
 #endif	// _command_h
