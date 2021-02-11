@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008-2010 by Чернов А.А.                                *
+ *   Copyright (C) 2008-2010 by пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ.пїЅ.                                *
  *   valexlin@gmail.com                                                    *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -65,6 +65,8 @@
 	#include <CarbonCore/Folders.h>
 #endif
 
+int MAX_FILENAME_ATTEMPTS = 9999;
+
 GEOSRecWnd::GEOSRecWnd()
  : QWidget(0)
 {
@@ -73,20 +75,20 @@ GEOSRecWnd::GEOSRecWnd()
 	QVBoxLayout* main_layout = new QVBoxLayout(this);
 	QHBoxLayout* btn_layout = new QHBoxLayout();
 
-	selFileBtn = new QToolButton(this);
-	selFileBtn->setText(tr("..."));
-	selFileBtn->setEnabled(false);
-	selFileBtn->setToolTip(tr("Select folder"));
-	btn_layout->addWidget(selFileBtn, 0);
+			// QIcon::setThemeName("Oxygen");
+	fprintf(stderr, "themeName: %s\n", QIcon::themeName().toLatin1().constData());
 	
-	selSettingsBtn = new QToolButton(this);
-	selSettingsBtn->setText(tr("...2"));
-	selSettingsBtn->setEnabled(true);
-	selSettingsBtn->setToolTip(tr("Setings"));
-	btn_layout->addWidget(selSettingsBtn, 0);
+	reconnBtn = new QToolButton(this);
+	//reconnBtn->setText(tr("R"));
+	reconnBtn->setIcon(QPixmap(usb_sign_black_xpm));
+	reconnBtn->setEnabled(false);
+	reconnBtn->setToolTip(tr("Reconnect to camera (O)"));
+	btn_layout->addWidget(reconnBtn, 0);
+	btn_layout->addSpacing(10);
 
 	startBtn = new QPushButton(tr("Write!"), this);
 	startBtn->setIcon(QPixmap(record_xpm));
+	// startBtn->setIcon(QIcon::fromTheme("media-record"));
 	startBtn->setEnabled(false);
 	startBtn->setToolTip(tr("Start recording (R)"));
 	btn_layout->addWidget(startBtn, 0);
@@ -99,109 +101,81 @@ GEOSRecWnd::GEOSRecWnd()
 	btn_layout->addWidget(stopBtn, 0);
 
 	cptBtn = new QPushButton(tr("CPT"), this);
-	// cptBtn->setIcon(QPixmap(stop_xpm));
-	cptBtn->setEnabled(true);
-	cptBtn->setToolTip(tr("Take a screenshot CPT (C)"));
-	cptBtn->setVisible(true);
+	// cptBtn->setIcon(QPixmap(cpt_xpm));
+	// cptBtn->setIcon(QIcon::fromTheme("camera-photo"));
+	// cptBtn->setIconSize(QSize(16, 16));
+	cptBtn->setEnabled(false);
+	cptBtn->setToolTip(tr("Take a screenshot (C)"));
 	btn_layout->addWidget(cptBtn, 0);
-	btn_layout->addWidget(new QLabel(tr("File path:"), this), 0);
-	path_label = new QLabel(tr("[]"), this);
-	btn_layout->addWidget(path_label, 0);
+		
+	selSettingsBtn = new QToolButton(this);
+	selSettingsBtn->setEnabled(true);
+	selSettingsBtn->setText(tr("..."));
+	// selSettingsBtn->setIcon(QIcon::fromTheme("configure"));
+	selSettingsBtn->setIcon(QIcon::fromTheme("document-open-folder"));
+	selSettingsBtn->setIconSize(QSize(16, 16));
+	selSettingsBtn->setToolTip(tr("Select filepaths"));
+	btn_layout->addWidget(selSettingsBtn, 0);
+	
+	btn_layout->addWidget(new QLabel(tr("Path:"), this), 0);
+	path_label = new QLabel("[]", this);
+	// path_label->setFrameShape(QFrame::Box);
+	path_label->setMinimumSize(1, 1);
+	btn_layout->addWidget(path_label, 1);
 
-	btn_layout->addSpacing(10);
-	AEModeBox = new QComboBox(this);
-	AEModeBox->setEditable(false);
-	AEModeBox->setEnabled(false);
-	AEModeBox->setToolTip(tr("Select AE Mode"));
-	btn_layout->addWidget(AEModeBox, 0);
-
-	isoBox = new QComboBox(this);
-	isoBox->setEditable(false);
-	isoBox->setEnabled(false);
-	isoBox->setToolTip(tr("Select ISO"));
-	btn_layout->addWidget(isoBox, 0);
-
-	dofBtn = new QToolButton(this);
-	dofBtn->setText("DOF");
-	dofBtn->setCheckable(true);
-	dofBtn->setEnabled(false);
-	dofBtn->setToolTip(tr("Enable/disable depth of field (D)"));
-	btn_layout->addWidget(dofBtn, 0);
-
-	avBox = new QComboBox(this);
-	//avBox->setEnabled(false);
-	avBox->setEditable(false);
-	avBox->setToolTip(tr("Select AV"));
-	btn_layout->addWidget(avBox, 0);
-
-	tvBox = new QComboBox(this);
-	//tvBox->setEnabled(false);
-	tvBox->setEditable(false);
-	tvBox->setToolTip(tr("Select TV"));
-	btn_layout->addWidget(tvBox, 0);
-
-	fpsLabel = new QLabel(tr("0 fps"), this);
-	//fpsLabel->setFrameShape(QFrame::Box);
-	//btn_layout->addWidget(fpsLabel, 0);
-
-	btn_layout->addStretch(10);
-
-	showBox = new QCheckBox(tr("Show captured image"), this);
+	showBox = new QCheckBox(tr("Show LiveView"), this);
 	showBox->setToolTip(tr("Show captured image (I)"));
 	btn_layout->addWidget(showBox, 0);
 	showBox->setCheckState(Qt::Checked);
 
 	optionsBtn = new QToolButton(this);
-	optionsBtn->setEnabled(false);
 	optionsBtn->setText(tr("O"));
-	optionsBtn->setToolTip(tr("Open options dialog"));
+		optionsBtn->setIcon(QIcon::fromTheme("configure"));
+	optionsBtn->setIconSize(QSize(16, 16));
+	optionsBtn->setToolTip(tr("Open camera options dialog"));
 	btn_layout->addWidget(optionsBtn, 0);
 
 	QToolButton* aboutBtn = new QToolButton(this);
 	aboutBtn->setText(tr("A"));
+	aboutBtn->setIcon(QIcon::fromTheme("dialog-information"));
+	aboutBtn->setIconSize(QSize(16, 16));
 	aboutBtn->setToolTip(tr("Show about box"));
 	btn_layout->addWidget(aboutBtn, 0);
 
 	QHBoxLayout* focus_layout = new QHBoxLayout();
-	reconnBtn = new QToolButton(this);
-	//reconnBtn->setText(tr("R"));
-	reconnBtn->setIcon(QPixmap(usb_sign_black_xpm));
-	reconnBtn->setEnabled(false);
-	reconnBtn->setToolTip(tr("Reconnect to camera (O)"));
-	focus_layout->addWidget(reconnBtn, 0);
-	focus_layout->addSpacing(10);
+
 	focus_layout->addWidget(new QLabel(tr("Focus adjust"), this), 0);
 
 	focusNear3Btn = new QToolButton(this);
 	focusNear3Btn->setText(tr("<<<"));
 	focusNear3Btn->setEnabled(false);
-	focusNear3Btn->setToolTip(tr("Move focus point to near (1)"));
+	focusNear3Btn->setToolTip(tr("Move focus point to near (1) or (scroll down)"));
 	focus_layout->addWidget(focusNear3Btn, 0);
 	focusNear2Btn = new QToolButton(this);
 	focusNear2Btn->setText(tr("<<"));
 	focusNear2Btn->setEnabled(false);
-	focusNear2Btn->setToolTip(tr("Move focus point to near (2)"));
+	focusNear2Btn->setToolTip(tr("Move focus point to near (2) or (scroll down + ctrl)"));
 	focus_layout->addWidget(focusNear2Btn, 0);
 	focusNear1Btn = new QToolButton(this);
 	focusNear1Btn->setText(tr("<"));
 	focusNear1Btn->setEnabled(false);
-	focusNear1Btn->setToolTip(tr("Move focus point to near (3)"));
+	focusNear1Btn->setToolTip(tr("Move focus point to near (3) or (scroll down + shift)"));
 	focus_layout->addWidget(focusNear1Btn, 0);
 
 	focusFar1Btn = new QToolButton(this);
 	focusFar1Btn->setText(tr(">"));
 	focusFar1Btn->setEnabled(false);
-	focusFar1Btn->setToolTip(tr("Move focus point to far (4)"));
+	focusFar1Btn->setToolTip(tr("Move focus point to far (4) or (scroll up + shift)"));
 	focus_layout->addWidget(focusFar1Btn, 0);
 	focusFar2Btn = new QToolButton(this);
 	focusFar2Btn->setText(tr(">>"));
 	focusFar2Btn->setEnabled(false);
-	focusFar2Btn->setToolTip(tr("Move focus point to far (5)"));
+	focusFar2Btn->setToolTip(tr("Move focus point to far (5) or (scroll up + ctrl)"));
 	focus_layout->addWidget(focusFar2Btn, 0);
 	focusFar3Btn = new QToolButton(this);
 	focusFar3Btn->setText(tr(">>>"));
 	focusFar3Btn->setEnabled(false);
-	focusFar3Btn->setToolTip(tr("Move focus point to far (6)"));
+	focusFar3Btn->setToolTip(tr("Move focus point to far (6) or (scroll up)"));
 	focus_layout->addWidget(focusFar3Btn, 0);
 
 	focus_layout->addSpacing(10);
@@ -264,9 +238,43 @@ GEOSRecWnd::GEOSRecWnd()
 	focus_layout->addWidget(wbTempBox, 0);
 
 	focus_layout->addStretch(1);
+	
+	// ------------------
+	
+	QHBoxLayout* cam_opts_layout = new QHBoxLayout();
 
-	blinkLabel = new QBlinkLabel(tr("Starting..."), this);
-	//main_layout->addWidget(blinkLabel, 0);
+	AEModeBox = new QComboBox(this);
+	AEModeBox->setEditable(false);
+	AEModeBox->setEnabled(false);
+	AEModeBox->setToolTip(tr("Select AE Mode"));
+	cam_opts_layout->addWidget(AEModeBox, 0);
+
+	isoBox = new QComboBox(this);
+	isoBox->setEditable(false);
+	isoBox->setEnabled(false);
+	isoBox->setToolTip(tr("Select ISO"));
+	cam_opts_layout->addWidget(isoBox, 0);
+
+	dofBtn = new QToolButton(this);
+	dofBtn->setText("DOF");
+	dofBtn->setCheckable(true);
+	dofBtn->setEnabled(false);
+	dofBtn->setToolTip(tr("Enable/disable depth of field (D)"));
+	cam_opts_layout->addWidget(dofBtn, 0);
+
+	avBox = new QComboBox(this);
+	//avBox->setEnabled(false);
+	avBox->setEditable(false);
+	avBox->setToolTip(tr("Select AV"));
+	cam_opts_layout->addWidget(avBox, 0);
+
+	tvBox = new QComboBox(this);
+	//tvBox->setEnabled(false);
+	tvBox->setEditable(false);
+	tvBox->setToolTip(tr("Select TV"));
+	cam_opts_layout->addWidget(tvBox, 0);
+	
+	cam_opts_layout->addSpacing(10);
 
 	QHBoxLayout* timer_layout = new QHBoxLayout();
 
@@ -294,16 +302,26 @@ GEOSRecWnd::GEOSRecWnd()
 	timer_layout->addWidget(framesTimerSpinBox, 0);
 
 	timer_layout->addStretch(1);
+	
+	QHBoxLayout* bottom_layout = new QHBoxLayout();
+	bottom_layout->addLayout(cam_opts_layout, 0);
+	bottom_layout->addLayout(timer_layout, 0);
 
 	main_layout->addLayout(btn_layout, 0);
 
 	main_layout->addLayout(focus_layout, 0);
 
-	main_layout->addLayout(timer_layout, 0);
+	main_layout->addLayout(bottom_layout, 0);
 
 	CaptureWnd = new GEOSCaptureWnd(this);
 	main_layout->addWidget(CaptureWnd, 0);
 	main_layout->addStretch(1);
+	
+
+	blinkLabel = new QBlinkLabel(tr("Starting..."), this);
+
+	fpsLabel = new QLabel(tr("0 fps"), this);
+	//fpsLabel->setFrameShape(QFrame::Box);
 
 	statusBar = new QStatusBar(this);
 	//statusBar->showMessage(tr("xyz"));
@@ -334,7 +352,6 @@ GEOSRecWnd::GEOSRecWnd()
 	QShortcut* zoomShortcut = new QShortcut(QKeySequence(Qt::Key_Z), this);
 	QShortcut* captureShortcut = new QShortcut(QKeySequence(Qt::Key_I), this);
 
-	connect(selFileBtn, SIGNAL(clicked()), this, SLOT(slotSelFile()));
 	connect(selSettingsBtn, SIGNAL(clicked()), this, SLOT(slotSettings()));
 	connect(reconnBtn, SIGNAL(clicked()), this, SLOT(slotReconnect()));
 	connect(startBtn, SIGNAL(clicked()), this, SLOT(slotStart()));
@@ -378,9 +395,10 @@ GEOSRecWnd::GEOSRecWnd()
 	connect(timeTimerBox, SIGNAL(clicked(bool)), this, SLOT(slotTimeTimerSwitch(bool)));
 	connect(framesTimerBox, SIGNAL(clicked(bool)), this, SLOT(slotFramesTimerSwitch(bool)));
 
-	CurrSettings.Path = tr("out.avi");
-	CurrSettings.VidName = tr("vid_out.avi");
-	CurrSettings.ImgName = tr("img_out.jpg");
+	// defaults
+	commonFilePath = QDir::homePath() + QDir::separator() + "eos_movrec"; //  QDir::currentPath();
+	CurrSettings.VidName = commonFilePath + QDir::separator() + tr("vid_out.avi");
+	CurrSettings.ImgName = commonFilePath + QDir::separator() + tr("img_out.jpg");
 	CurrSettings.Av = -1;
 	CurrSettings.Tv = -1;
 	CurrSettings.ISO = -1;
@@ -392,7 +410,6 @@ GEOSRecWnd::GEOSRecWnd()
 	CurrSettings.UseStabFPS = true;
 	CurrSettings.ShowWhiteBox = false;
 
-	BackupSettings.Path = CurrSettings.Path;
 	BackupSettings.VidName = CurrSettings.VidName;
 	BackupSettings.ImgName = CurrSettings.ImgName;
 	BackupSettings.Av = CurrSettings.Av;
@@ -413,12 +430,14 @@ GEOSRecWnd::GEOSRecWnd()
 	AFThread = 0;
 	HistogramWnd = 0;
 
+	loadSettingsFilepaths();
+
 	//QTimer::singleShot(4000, this, SLOT(slotStartTimeout()));
 	/*StartTimer = new QTimer(this);
 	StartTimer->setSingleShot(true);
 	connect(StartTimer, SIGNAL(timeout()), this, SLOT(slotStartTimeout()));
 	StartTimer->start(10000);*/
-	// отключено по просьбе форумчан (forum.ixbt.com)
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (forum.ixbt.com)
 	//QTimer::singleShot(1200000, this, SLOT(slotWorkTimeout()));		// max work time is 20 min
 }
 
@@ -516,7 +535,6 @@ void GEOSRecWnd::close_app()
 				QSizeF lvSize = QSizeF(features.LiveViewSize_x, features.LiveViewSize_y);
 				if (!largeSize.isEmpty() && !lvSize.isEmpty())
 					CaptureWnd->setZoomPositionDivisor(largeSize.width()/lvSize.width(), largeSize.height()/lvSize.height());
-				selFileBtn->setEnabled(true);
 				//startBtn->setEnabled(true);
 				AEModeBox->setEnabled(true);
 				dofBtn->setEnabled(true);
@@ -551,7 +569,7 @@ void GEOSRecWnd::slotReconnect()
 	if (!LiveThread)
 	{
 		blinkLabel->stop();
-		blinkLabel->setText(tr("Starting..."));
+		blinkLabel->setText(tr("Starting...  (reconnect)"));
 		reconnBtn->setEnabled(false);
 
 		LiveThread = new GMyLiveThread(this);
@@ -560,9 +578,18 @@ void GEOSRecWnd::slotReconnect()
 
 		//QTimer::singleShot(4000, this, SLOT(slotStartTimeout()));
 		//StartTimer->start(4000);
-		// отключено по просьбе форумчан (forum.ixbt.com)
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (forum.ixbt.com)
 		//QTimer::singleShot(1200000, this, SLOT(slotWorkTimeout()));		// max work time is 20 min
 	}
+}
+
+void GEOSRecWnd::loadSettingsFilepaths()
+{
+	QSettings settings(QSettings::UserScope, QString("eos_movrec"));
+	CurrSettings.VidName = settings.value(QString("VidName"), CurrSettings.VidName).toString();
+	CurrSettings.ImgName = settings.value(QString("ImgName"), CurrSettings.ImgName).toString();
+	derivePath();
+	setPathLabel();
 }
 
 void GEOSRecWnd::loadSettings()
@@ -578,10 +605,10 @@ void GEOSRecWnd::loadSettings()
 	BackupSettings.UseStabFPS = CurrSettings.UseStabFPS;
 	BackupSettings.ShowWhiteBox = CurrSettings.ShowWhiteBox;
 
+	loadSettingsFilepaths();
+	
 	QSettings settings(QSettings::UserScope, QString("eos_movrec"));
-	CurrSettings.Path = settings.value(QString("Path"), QVariant(QString("out.avi"))).toString();
-	CurrSettings.VidName = settings.value(QString("VidName"), QVariant(QString("vid_out.avi"))).toString();
-	CurrSettings.ImgName = settings.value(QString("ImgName"), QVariant(QString("cpt_out.jpg"))).toString();
+	
 	int i;
 	int ae = settings.value(QString("AEMode"), QVariant((int)-1)).toInt();
 	for (i = 0; i < AEModeBox->count(); i++)
@@ -635,6 +662,14 @@ void GEOSRecWnd::loadSettings()
 	CurrSettings.ShowWhiteBox = settings.value(QString("ShowWhiteBox"), false).toBool();
 }
 
+void GEOSRecWnd::saveSettingsFilepaths()
+{
+	QSettings settings(QSettings::UserScope, QString("eos_movrec"));
+	
+	settings.setValue(QString("VidName"), QVariant(CurrSettings.VidName));
+	settings.setValue(QString("ImgName"), QVariant(CurrSettings.ImgName));
+}
+
 void GEOSRecWnd::saveSettings()
 {
 	if (LiveThread)
@@ -650,9 +685,7 @@ void GEOSRecWnd::saveSettings()
 		OSSleep(100);
 	}
 	QSettings settings(QSettings::UserScope, QString("eos_movrec"));
-	settings.setValue(QString("Path"), QVariant(CurrSettings.Path));
-	settings.setValue(QString("VidName"), QVariant(CurrSettings.VidName));
-	settings.setValue(QString("ImgName"), QVariant(CurrSettings.ImgName));
+	
 	settings.setValue(QString("AEMode"), QVariant(CurrSettings.AEMode));
 	settings.setValue(QString("Av"), QVariant(CurrSettings.Av));
 	settings.setValue(QString("Tv"), QVariant(CurrSettings.Tv));
@@ -675,7 +708,7 @@ void GEOSRecWnd::customEvent(QEvent* event)
 	{
 	case CAMERA_EVENT_NOCAMERA:
 		shutdown();
-		blinkLabel->setText(tr("Camera not found/not supported/not connected!"));
+		blinkLabel->setText(tr("Camera not found / not supported / not connected!"));
 		blinkLabel->start();
 		QMessageBox::critical(this, tr("Error"), tr("Can't initialize your camera!\n\nCheck camera connection.\n\nYou might need to reconnect the USB cable or turn your camera off then back on again."));
 		break;
@@ -687,12 +720,10 @@ void GEOSRecWnd::customEvent(QEvent* event)
 		break;
 	case CAMERA_EVENT_LV_STARTED:
 		{
-			struct EOSCamFeatures features = LiveThread->cameraFeatures();
 			QSizeF largeSize = QSizeF(features.JpegLargeSize_x, features.JpegLargeSize_y);
 			QSizeF lvSize = QSizeF(features.LiveViewSize_x, features.LiveViewSize_y);
 			if (!largeSize.isEmpty() && !lvSize.isEmpty())
 				CaptureWnd->setZoomPositionDivisor(largeSize.width()/lvSize.width(), largeSize.height()/lvSize.height());
-			selFileBtn->setEnabled(true);
 			//startBtn->setEnabled(true);
 			cptBtn->setEnabled(true);
 			AEModeBox->setEnabled(true);
@@ -706,7 +737,6 @@ void GEOSRecWnd::customEvent(QEvent* event)
 			blinkLabel->stop();
 			QString str = LiveThread->cameraName() + QString(": ");
 			blinkLabel->setText(str + tr("Ready"));
-			optionsBtn->setEnabled(true);
 			timeTimerBox->setEnabled(true);
 			framesTimerBox->setEnabled(true);
 			slotTimeTimerSwitch(timeTimerBox->isChecked());
@@ -723,13 +753,12 @@ void GEOSRecWnd::customEvent(QEvent* event)
 			QString str = LiveThread->cameraName() + QString(": ");
 			blinkLabel->setText(str + tr("Ready"));
 			showBox->setEnabled(true);
+			cptBtn->setEnabled(true);
 			startBtn->setEnabled(true);
 			startBtn->setVisible(true);
 			stopBtn->setEnabled(false);
 			stopBtn->setVisible(false);
-			selFileBtn->setEnabled(true);
 			zoom5xBtn->setEnabled(true);
-			optionsBtn->setEnabled(true);
 			timeTimerBox->setEnabled(true);
 			framesTimerBox->setEnabled(true);
 			slotTimeTimerSwitch(timeTimerBox->isChecked());
@@ -875,6 +904,7 @@ void GEOSRecWnd::customEvent(QEvent* event)
 		}
 		break;
 	case CAMERA_EVENT_FPS_CALCULATED:
+		cptBtn->setEnabled(true);
 		startBtn->setEnabled(true);
 		break;
 	case CAMERA_EVENT_AEMODE_CHANGED:
@@ -1045,70 +1075,47 @@ void GEOSRecWnd::customEvent(QEvent* event)
 	e->accept();
 }
 
-void GEOSRecWnd::slotSelFile()
+void GEOSRecWnd::setPathLabel()
 {
-fprintf(stderr, ":::slotSelFile\n");
-	QString path = QFileDialog::getSaveFileName(this, tr("Save file"), CurrSettings.Path,
-		tr("Video (*.avi)"), 0, QFileDialog::DontConfirmOverwrite);
-	if (!path.isNull() && !path.isEmpty())
+	path_label->setToolTip(commonFilePath);
+	//path_label->setText("[" + commonFilePath + "]");
+	
+	QFontMetrics metrics(path_label->font());
+	path_label->setText("[" + metrics.elidedText(commonFilePath, Qt::ElideMiddle, path_label->width() - 10) + "]");
+	
+	QString cmpIMGpath = QFileInfo(CurrSettings.ImgName).path().toLatin1().constData();
+	if (cmpIMGpath != commonFilePath)
 	{
-		CurrSettings.Path = path;
-		// CurrSettings.VidName = ;
-		
+		path_label->setToolTip("VID PATH: [" + commonFilePath + "]\nCPT PATH: [" + cmpIMGpath + "]");
+		path_label->setText(" * [" + metrics.elidedText(commonFilePath, Qt::ElideMiddle, path_label->width() - 10) + "]");
 	}
+}
+
+void GEOSRecWnd::derivePath()
+{
+	commonFilePath = QFileInfo(CurrSettings.VidName).path().toLatin1().constData(); // FIXME for i18n, this should be a QSTRING
 }
 
 void GEOSRecWnd::slotSettings()
 {
-fprintf(stderr, ":::slotSettings\n");
-	// ------------------------
-	fprintf(stderr, "CPT! curpath: [%s]\n", CurrSettings.Path.toLatin1().constData());
-	fprintf(stderr, "CPT! VidName: [%s]\n", CurrSettings.VidName.toLatin1().constData());
-	fprintf(stderr, "CPT! ImgName: [%s]\n", CurrSettings.ImgName.toLatin1().constData());
-	// ------------------------
-	/*
-	QString dir = QFileDialog::getExistingDirectory(this, tr("Save directory"), CurrSettings.Path,
-		QFileDialog::ShowDirsOnly);
-	if (!dir.isNull() && !dir.isEmpty())
-	{
-		CurrSettings.ImgName = dir;
-fprintf(stderr, "slotSettings: ImgName: [%s]\n", CurrSettings.ImgName.toLatin1().constData());
-	}
-	*/
-	// ------------------------
 	GPathsDlg dlg(this);
-	dlg.setOptions(CurrSettings.Path, CurrSettings.VidName, CurrSettings.ImgName);
+	dlg.setFilePaths(CurrSettings.VidName, CurrSettings.ImgName);
 	if (dlg.exec() == QDialog::Accepted) {
-		// CurrSettings.Path = dlg.Path();
 		CurrSettings.VidName = dlg.getVidName();
 		CurrSettings.ImgName = dlg.getImgName();
- fprintf(stderr, "GEOSRecWnd::slotSettings: ACCEPTED: [%s, %s, %s]\n",
-					dlg.getPath().toLatin1().constData(),
-					dlg.getVidName().toLatin1().constData(),
-					dlg.getImgName().toLatin1().constData());
+		derivePath();
+		saveSettingsFilepaths();
+		setPathLabel();
 		if (LiveThread && LiveThread->isInit()) {
 			// NOTE: check if changing vid name during rec is a problem
 		}
 	}
-	// ------------------------
-	fprintf(stderr, "CPT! curpath: [%s]\n", CurrSettings.Path.toLatin1().constData());
-	fprintf(stderr, "CPT! VidName: [%s]\n", CurrSettings.VidName.toLatin1().constData());
-	fprintf(stderr, "CPT! ImgName: [%s]\n", CurrSettings.ImgName.toLatin1().constData());
-	// ------------------------
 }
 
 
 void GEOSRecWnd::slotCPT()
 {
-	fprintf(stderr, "CPT!\n");
-	fprintf(stderr, "CPT! curpath: [%s]\n", CurrSettings.Path.toAscii().constData());
-	fprintf(stderr, "CPT! VidName: [%s]\n", CurrSettings.VidName.toAscii().constData());
-	fprintf(stderr, "CPT! ImgName: [%s]\n", CurrSettings.ImgName.toAscii().constData());
-		// .toUtf8().constData();
-		// .toStdString() -- no werks
-	
 	QString availImgName = getNextfName(CurrSettings.ImgName);
-	fprintf(stderr, "saved image would be: [%s]\n", availImgName.toAscii().constData());
 	
 	if (LiveThread && LiveThread->isInit()) {
 		QString availImgName = getNextfName(CurrSettings.ImgName);
@@ -1116,8 +1123,8 @@ void GEOSRecWnd::slotCPT()
 			LiveThread->setImgFileName(availImgName.toAscii().constData());
 			LiveThread->cmdDoCPT();
 			// path_label->setText(tr("saved image: [") + CurrSettings.ImgName +tr("]"));
-			path_label->setText("captured: [" + availImgName + "]");
-			fprintf(stderr, "saved image would be: [%s]\n", availImgName.toAscii().constData());
+			// path_label->setText("captured: [" + availImgName + "]");
+			fprintf(stderr, "Captured image: [%s]\n", availImgName.toAscii().constData());
 			}
 		else {
 			fprintf(stderr, "could not set img filename!\n");
@@ -1132,25 +1139,17 @@ void GEOSRecWnd::slotStart()
 {
 	if (LiveThread && LiveThread->isInit())
 	{
-		QFileInfo fi(CurrSettings.Path);
-		while (fi.exists())
-		{
-			CurrSettings.Path = giveNextName(CurrSettings.Path);
-			fi.setFile(CurrSettings.Path);
-		}
-		//QMessageBox::information(this, tr("path"), Path);
 		static QTextCodec* tcodec = QTextCodec::codecForLocale();
-		LiveThread->setFileName(tcodec->fromUnicode(CurrSettings.Path).data());
+fprintf(stderr, "GEOSRecWnd::slotStart: FIXME -- CHECK for no filename (error)\n");
+#warning GEOSRecWnd::slotStart: FIXME -- CHECK for no filename (error)
+		LiveThread->setVidFileName(tcodec->fromUnicode(getNextfName(CurrSettings.VidName)).data());				// FIXME FIXME -- CHECK for no filename (error)
 		LiveThread->setBufferSize(CurrSettings.BufferSize);
-		selFileBtn->setEnabled(false);
 		showBox->setEnabled(false);
 		startBtn->setEnabled(false);
 		startBtn->setVisible(false);
-		cptBtn->setEnabled(true);
 		stopBtn->setEnabled(true);
 		stopBtn->setVisible(true);
 		zoom5xBtn->setEnabled(false);
-		optionsBtn->setEnabled(false);
 		if (timeTimerBox->isChecked())
 			LiveThread->setTimeTimer(timeTimerSpinBox->value()*1000);
 		else
@@ -1410,7 +1409,7 @@ void GEOSRecWnd::slotHistogram()
 	}
 }
 
-// отключено по просьбе форумчан (forum.ixbt.com)
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (forum.ixbt.com)
 /*void GEOSRecWnd::slotWorkTimeout()
 {
 	shutdown();
@@ -1461,12 +1460,11 @@ void GEOSRecWnd::shutdown()
 		HistBtn->setChecked(false);
 	}
 	showBox->setEnabled(false);
+	cptBtn->setEnabled(false);
 	startBtn->setEnabled(false);
 	stopBtn->setEnabled(false);
 	startBtn->setVisible(true);
 	stopBtn->setVisible(false);
-	// cptBtn->setEnabled(false);
-	selFileBtn->setEnabled(false);
 	reconnBtn->setEnabled(true);
 	AEModeBox->setEnabled(false);
 	isoBox->setEnabled(false);
@@ -1482,7 +1480,6 @@ void GEOSRecWnd::shutdown()
 	focusFar2Btn->setEnabled(false);
 	focusFar3Btn->setEnabled(false);
 	zoom5xBtn->setEnabled(false);
-	optionsBtn->setEnabled(false);
 	AFBtn->setEnabled(false);
 	HistBtn->setEnabled(false);
 	timeTimerBox->setEnabled(false);
@@ -1534,28 +1531,26 @@ void GEOSRecWnd::slotAbout()
 QString GEOSRecWnd::getNextfName(const QString& fName)
 {
 	QString retname = fName;
-	retname = "/home/my_user/CANON/mycanonjpeg.jpg";
+ 
+	if (QFileInfo(retname).isRelative())
+	{
+		retname = QFileInfo(commonFilePath, fName).absoluteFilePath().toAscii().constData();
+	}
+ 
+	// QString path = QFileInfo(retname).absoluteFilePath().toAscii().constData();
 	QString path = QFileInfo(retname).path().toAscii().constData();
 	QString base = QFileInfo(retname).completeBaseName().toAscii().constData();
 	QString ext  = QFileInfo(retname).suffix().toAscii().constData();
  
- fprintf(stderr, "GEOSRecWnd::getNextfName: retname: [%s]\n", retname.toAscii().constData());
- fprintf(stderr, "GEOSRecWnd::getNextfName: dir retname: [%s]\n", path.toAscii().constData());
- //fprintf(stderr, "GPathsDlg::slotSelImgName: ext retname: [%s]\n", QFileInfo(retname).extension().toAscii().constData());
- fprintf(stderr, "GEOSRecWnd::getNextfName: base retname: [%s]\n", base.toAscii().constData());
- fprintf(stderr, "GEOSRecWnd::getNextfName: ext retname: [%s]\n", ext.toAscii().constData());
- 
 	QFileInfo fi(retname);
 	int i=0;
 	while (fi.exists()) {
-		// retname = path + base + "_" + i + ext;
 		fi.setFile(retname);
-		retname = QDir(path).filePath(QString("%1_%2.%3").arg(base).arg(i,3,10,QChar('0')).arg(ext));
+		retname = QDir(path).filePath(QString("%1_%2.%3").arg(base).arg(i, 3, 10, QChar('0')).arg(ext));
 		//retname = QString("%1/%2_%3.%4").arg(path).arg(base).arg(i,3,10,QChar('0')).arg(ext);
 		fi.setFile(retname);
-//fprintf(stderr, "GEOSRecWnd::getNextfName: trying retname: [%s]\n", retname.toAscii().constData());
-		if (i>= 999) {
-fprintf(stderr, "GEOSRecWnd::getNextfName: giving up after [%d] tries\n", i);
+		if (i >= MAX_FILENAME_ATTEMPTS) {
+			fprintf(stderr, "GEOSRecWnd::getNextfName: giving up after [%d] tries\n", i);
 			retname = "";
 			break;
 			}
@@ -1635,7 +1630,7 @@ void GEOSRecWnd::wheelEvent(QWheelEvent* event)
 {
 	int d =  (event->delta()/120)*10;
 		
-	if (d < 0) {
+	if (d < 0) { // scroll down
 		if( event->modifiers() & Qt::ShiftModifier ) {
 			slotFocusNear1();
 			}
@@ -1646,7 +1641,7 @@ void GEOSRecWnd::wheelEvent(QWheelEvent* event)
 			slotFocusNear3();
 			}
 		}
-	else {
+	else { // scroll up
 		if( event->modifiers() & Qt::ShiftModifier ) {
 			slotFocusFar1();
 			}

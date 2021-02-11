@@ -25,12 +25,7 @@
 #include <QWidget>
 
 #include <qstring.h>
-/*
-#include <QString>
-class QSpinBox;
-class QComboBox;
-class QCheckBox;
-*/
+
 class QString;
 class QLabel;
 class QToolButton;
@@ -44,43 +39,18 @@ public:
 	// explicit GPathsDlg(QWidget* parent);
 	GPathsDlg(QWidget* parent);
 	~GPathsDlg();
-	// void setOptions(QString Path, QString VidName, QString ImgName);
-	void setOptions(QString newPath, QString newVidName, QString newImgName);
-// 	QString getVidName() {return VidName};
- 	QString getPath() {return Path;};
+	void setFilePaths(QString newVidName, QString newImgName);
  	QString getVidName() {return VidName;};
  	QString getImgName() {return ImgName;};
 private slots:
-// public slots:
-	// void slotCPTdir();
-	void slotSelPath();
 	void slotSelVidName();
 	void slotSelImgName();
 	
-/*
-	int bufferSize();
-	int afMode();
-	bool useStabFPS();
-	bool showWhiteBox();
-*/
 private:
-/*
-	QSpinBox* BufferBox;
-	QComboBox* AFModeBox;
-	QCheckBox* StabFPSBox;
-	QCheckBox* ShowWhiteBox;
-*/
-	QString Path;
 	QString VidName;
 	QString ImgName;
-	/*
-	char* Path;
-	*/
-	QToolButton* PathBtn;
 	QToolButton* VidNameBtn;
 	QToolButton* ImgNameBtn;
-	
-	QLabel* PathLabel;
 	QLabel* VidNameLabel;
 	QLabel* ImgNameLabel;
 	

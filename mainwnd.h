@@ -51,7 +51,6 @@ public:
 	void close_app();
 protected slots:
 	void slotReconnect();
-	void slotSelFile();
 	void slotStart();
 	void slotStop();
 	void slotCPT();
@@ -82,19 +81,22 @@ protected slots:
 	void slotTimeTimerSwitch(bool);
 	void slotFramesTimerSwitch(bool);
 protected:
+	void setPathLabel();
+	void derivePath();
 	virtual void customEvent(QEvent* event);
 	virtual void closeEvent(QCloseEvent* event);
 private:
 	QString giveNextName(const QString& path);
 	QString getNextfName(const QString& fName);
 	void shutdown();
+	void loadSettingsFilepaths();
 	void loadSettings();
+	void saveSettingsFilepaths();
 	void saveSettings();
 private:
 	//QTimer* StartTimer;
 	QBlinkLabel* blinkLabel;
 	QToolButton* reconnBtn;
-	QToolButton* selFileBtn;
 	QToolButton* selSettingsBtn;
 	QPushButton* startBtn;
 	QPushButton* stopBtn;
@@ -131,9 +133,9 @@ private:
 	GAFThread* AFThread;
 	GEOSCaptureWnd* CaptureWnd;
 	GHistogramWnd* HistogramWnd;
+	QString commonFilePath;
 	struct GSavedSettings
 	{
-		QString Path;
 		QString VidName;
 		QString ImgName;
 		int Av;

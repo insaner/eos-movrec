@@ -449,6 +449,7 @@ bool GMyLiveThread::processCommand()
 			err = EdsSetPropertyData(camera, kEdsPropID_Evf_DepthOfFieldPreview, 0, sizeof(EdsUInt32), &param2);
 #endif
 #ifdef GPHOTO2
+		// this code imported from: canon_eos_planetmovie_recorder
 		if (err >= GP_OK)
 			err = _gp_set_config_value_string(camera, "depthoffield", param2 ? "1" : "0", camera_context);
 #endif
@@ -959,7 +960,7 @@ void GMyLiveThread::run()
 				DuplicatedCount = 0;
 				if (mjpeg)
 					mjpegCloseFile(mjpeg);
-				mjpeg = mjpegCreateFile(FileName);
+				mjpeg = mjpegCreateFile(vidFileName);
 				if (mjpeg)
 				{
 					max_frame_size = 0;
@@ -2100,7 +2101,7 @@ bool GMyLiveThread::downloadEvfData()
 		free(str_val);
 #endif
 
-	// TO-DO: get histogram
+	// TODO: get histogram
 	if (gpfile)
 		gp_file_free(gpfile);
 	return ret == GP_OK;
