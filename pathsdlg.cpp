@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include "debug.h"
+
 #include "pathsdlg.h"
 
 #include <QVBoxLayout>
@@ -107,7 +109,7 @@ GPathsDlg::GPathsDlg(QWidget* parent)
 
 void GPathsDlg::setFilePaths(QString newVidName, QString newImgName)
 {
-	fprintf(stderr, "GPathsDlg::setFilePaths: [%s, %s]\n",
+	if (DEBUG) fprintf(stderr, "GPathsDlg::setFilePaths: [%s, %s]\n",
 		newVidName.toLatin1().constData(),
 		newImgName.toLatin1().constData() );
 	VidName = newVidName;

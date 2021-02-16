@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include "debug.h"
+
 #include "livethread.h"
 #include <QMutex>
 #include <QWidget>
@@ -1572,6 +1574,7 @@ bool GMyLiveThread::fillCameraName()
 	err = _gp_get_config_value_string(camera, "focusinfo", &str_val, camera_context);
 	if (err >= GP_OK && str_val)
 	{
+		if (DEBUG) fprintf(stderr, "focusinfo: %s\n", str_val);
 		char *pch = strstr(str_val, "size=");
 		if (pch != NULL)
 		{
@@ -2367,7 +2370,7 @@ void GMyLiveThread::stateEvent(EdsStateEvent event, EdsUInt32 parameter)
 #ifdef GPHOTO2
 void GMyLiveThread::propertyEvent(const char* prop_name)
 {
-	fprintf(stderr, "Property '%s' changed!\n", prop_name);
+	if (DEBUG) fprintf(stderr, "Property '%s' changed! ", prop_name);
 	if (strncasecmp(prop_name, "d1b0", 4) == 0)			// EVF Output device
 	{
 		fprintf(stderr, "evf\n");
@@ -2491,10 +2494,11 @@ int GMyLiveThread::gp2_camera_check_event()
 		ret = gp_camera_wait_for_event(camera, 0, &event_type, (void**)&event_data, camera_context);
 		if (ret >= GP_OK)
 		{
-			fprintf(stderr, "event_type: ");
+			if (DEBUG) fprintf(stderr, "event_type: ");
 			switch(event_type)
 			{
 			case GP_EVENT_UNKNOWN:
+				if (DEBUG) fprintf(stderr, "unknown - ");
 				if (event_data)
 				{
 					char* ptr = strstr(event_data, "changed");
@@ -2515,7 +2519,7 @@ int GMyLiveThread::gp2_camera_check_event()
 						}
 					}
 				}
-				fprintf(stderr, "unknown");
+				if (DEBUG) fprintf(stderr, "unknown");
 				break;
 			case GP_EVENT_TIMEOUT:
 				// fprintf(stderr, "timeout");
@@ -2523,24 +2527,25 @@ int GMyLiveThread::gp2_camera_check_event()
 				//return 1;
 				break;
 			case GP_EVENT_FILE_ADDED:
-				fprintf(stderr, "file added");
+				if (DEBUG) fprintf(stderr, "file added");
 				break;
 			case GP_EVENT_FOLDER_ADDED:
-				fprintf(stderr, "folder added");
+				if (DEBUG) fprintf(stderr, "folder added");
 				break;
 			case GP_EVENT_CAPTURE_COMPLETE:
-				fprintf(stderr, "capture complete");
+				if (DEBUG) fprintf(stderr, "capture complete");
 				break;
 			default:
-				fprintf(stderr, "[%d]", event_type);
+				if (DEBUG) fprintf(stderr, "event_type: [%d]", event_type);
+				if (DEBUG) fprintf(stderr, "\n");
 				;
 			}
 			if (event_data)
 			{
-				fprintf(stderr, "; event_data = '%s'", event_data);
+				// if (DEBUG) fprintf(stderr, "; event_data = '%s'", event_data);
 				free(event_data);
 			}
-			fprintf(stderr, "\n");
+			if (DEBUG) fprintf(stderr, "\n");
 		}
 		else
 		{
