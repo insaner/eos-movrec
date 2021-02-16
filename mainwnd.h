@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008-2009 by пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ.пїЅ.                                *
+ *   Copyright (C) 2008-2009 by Чернов А.А.                                *
  *   valexlin@gmail.com                                                    *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -93,7 +93,7 @@ protected:
 	void derivePath();
 	virtual void customEvent(QEvent* event);
 	virtual void closeEvent(QCloseEvent* event);
-    virtual void resizeEvent(QResizeEvent *event) override;
+	virtual void resizeEvent(QResizeEvent *event) override;
 private:
 	QString giveNextName(const QString& path);
 	QString getNextfName(const QString& fName);

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008-2010 by пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ.пїЅ.                                *
+ *   Copyright (C) 2008-2010 by Чернов А.А.                                *
  *   valexlin@gmail.com                                                    *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *

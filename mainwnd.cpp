@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008-2010 by пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ.пїЅ.                                *
+ *   Copyright (C) 2008-2010 by Чернов А.А.                                *
  *   valexlin@gmail.com                                                    *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -457,7 +457,7 @@ GEOSRecWnd::GEOSRecWnd()
 	StartTimer->setSingleShot(true);
 	connect(StartTimer, SIGNAL(timeout()), this, SLOT(slotStartTimeout()));
 	StartTimer->start(10000);*/
-	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (forum.ixbt.com)
+	// disabled at the request of members of the forum (forum.ixbt.com)
 	//QTimer::singleShot(1200000, this, SLOT(slotWorkTimeout()));		// max work time is 20 min
 }
 
@@ -603,7 +603,7 @@ void GEOSRecWnd::slotReconnect()
 
 		//QTimer::singleShot(4000, this, SLOT(slotStartTimeout()));
 		//StartTimer->start(4000);
-		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (forum.ixbt.com)
+		// disabled at the request of members of the forum (forum.ixbt.com)
 		//QTimer::singleShot(1200000, this, SLOT(slotWorkTimeout()));		// max work time is 20 min
 	}
 }
@@ -778,7 +778,6 @@ void GEOSRecWnd::customEvent(QEvent* event)
 			blinkLabel->stop();
 			QString str = LiveThread->cameraName() + QString(": ");
 			blinkLabel->setText(str + tr("Ready"));
-			optionsBtn->setEnabled(true);
 			timeTimerBox->setEnabled(true);
 			framesTimerBox->setEnabled(true);
 			slotTimeTimerSwitch(timeTimerBox->isChecked());
@@ -1486,7 +1485,7 @@ void GEOSRecWnd::slotHistogram()
 	}
 }
 
-// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (forum.ixbt.com)
+// disabled at the request of members of the forum (forum.ixbt.com)
 /*void GEOSRecWnd::slotWorkTimeout()
 {
 	shutdown();

@@ -2494,7 +2494,8 @@ int GMyLiveThread::gp2_camera_check_event()
 		ret = gp_camera_wait_for_event(camera, 0, &event_type, (void**)&event_data, camera_context);
 		if (ret >= GP_OK)
 		{
-			if (DEBUG) fprintf(stderr, "event_type: ");
+			if (event_type != GP_EVENT_TIMEOUT )	// otherwise these messages would flood the console
+				if (DEBUG) fprintf(stderr, "   event_type: ");
 			switch(event_type)
 			{
 			case GP_EVENT_UNKNOWN:
