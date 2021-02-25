@@ -319,10 +319,17 @@ GEOSRecWnd::GEOSRecWnd()
 	timer_layout->addWidget(framesTimerSpinBox, 0);
 
 	timer_layout->addStretch(1);
+
+	QHBoxLayout* battery_layout = new QHBoxLayout();
+	battery_layout->addWidget(new QLabel(tr("Batt: "), this), 0);
+	batteryLevelLabel = new QLabel(tr("-"), this);
+	battery_layout->addWidget(batteryLevelLabel, 0);
+
 	
 	QHBoxLayout* bottom_layout = new QHBoxLayout();
 	bottom_layout->addLayout(cam_opts_layout, 0);
 	bottom_layout->addLayout(timer_layout, 0);
+	bottom_layout->addLayout(battery_layout, 0);
 
 	main_layout->addLayout(btn_layout, 0);
 
@@ -786,6 +793,7 @@ void GEOSRecWnd::customEvent(QEvent* event)
 			loadSettings();
 			LiveThread->setUseStabFPS(CurrSettings.UseStabFPS);
 			CaptureWnd->setShowWhiteBox(CurrSettings.ShowWhiteBox);
+			batteryLevelLabel->setText(LiveThread->getBatteryLevel());
 		}
 		break;
 	case CAMERA_EVENT_WRITE_STOPPED:
@@ -809,6 +817,9 @@ void GEOSRecWnd::customEvent(QEvent* event)
 			slotTimeTimerSwitch(timeTimerBox->isChecked());
 			slotFramesTimerSwitch(framesTimerBox->isChecked());
 		}
+		break;
+	case CAMERA_EVENT_UPDATE_BATTERY:
+		batteryLevelLabel->setText(LiveThread->getBatteryLevel());
 		break;
 	case CAMERA_EVENT_ISO_CHANGED:
 		{

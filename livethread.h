@@ -96,6 +96,8 @@ public:
 	void setTimeTimer(int timer);
 	void setFramesTimer(int timer);
 	void setMovieInfo(const char* info);
+	QString getBatteryLevel();
+	void cmdUpdateBatteryLevel();
 	void cmdDoCPT();
 	void cmdSetAEMode(int ae);
 	void cmdSetWB(int wb, int temp);
@@ -174,6 +176,7 @@ private:
 	bool endLiveView();
 	int camera_auto_focus(Camera* camera, GPContext* context, int onoff);
 	bool processCommand();
+	void updateBatteryLevel();
 	bool fillAvList();
 	bool fillTvList();
 	bool fillISOList();
@@ -226,6 +229,7 @@ private:
 	bool isSDKLoaded;
 	bool UseStabFPS;
 	QString CameraName;
+	QString batteryLevel;
 	struct EOSCamFeatures CamFeatures;
 	int TimeTimer;
 	int FramesTimer;

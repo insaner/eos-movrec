@@ -57,6 +57,7 @@ private:
 #define CAMERA_EVENT_FPS_CALCULATED		(QEvent::Type)(QEvent::User + 21)
 #define CAMERA_EVENT_UPDATE_COUNTERS	(QEvent::Type)(QEvent::User + 22)
 #define CAMERA_EVENT_WRITE_STOPPED	(QEvent::Type)(QEvent::User + 23)
+#define CAMERA_EVENT_UPDATE_BATTERY	(QEvent::Type)(QEvent::User + 24)
 #define CAMERA_EVENT_SHOWMSG		(QEvent::Type)(QEvent::User + 99)
 #define CAMERA_EVENT_SHUTDOWN		(QEvent::Type)(QEvent::User + 100)
 

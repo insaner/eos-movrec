@@ -176,6 +176,14 @@ void GMyLiveThread::stopWrite()
 	WrtFlagMutex.unlock();
 }
 
+void GMyLiveThread::cmdUpdateBatteryLevel()
+{
+	CommandMutex.lock();
+	GCameraCommand cmd(COMMAND_UPDATE_BATTERY_LEVEL, 0, 0);
+	CommandsQueue.append(cmd);
+	CommandMutex.unlock();
+}
+
 void GMyLiveThread::cmdDoCPT()
 {
 	CommandMutex.lock();
@@ -368,6 +376,9 @@ bool GMyLiveThread::processCommand()
 #endif
 	switch (cmd.command())
 	{
+	case COMMAND_UPDATE_BATTERY_LEVEL:
+		updateBatteryLevel();
+		break;
 	case COMMAND_DO_CPT:
 		{
 				// NOTE: no exif data yet
@@ -810,6 +821,8 @@ void GMyLiveThread::run()
 	// get AE mode
 	cmdRequestAEModeList();
 	cmdRequestAEMode();
+	
+	cmdUpdateBatteryLevel();
 
 	SkippedCount = 0;
 	AllFramesCount = 0;
@@ -1074,7 +1087,7 @@ void GMyLiveThread::run()
 			}
 		}
 
-		// calc temp fps
+		// calc temp fps, and refresh battery level display
 		if (TempTime2 - TempTime1 >= 2000)
 		{
 			TempFPS = ((double)TempFrameCount*1000.0)/(double)(TempTime2 - TempTime1);
@@ -1087,6 +1100,8 @@ void GMyLiveThread::run()
 				StableFPS = ((double)(StableFPSCount - 2)*StableFPS + TempFPS)/(double)(StableFPSCount - 1);
 			if (Owner)
 			{
+				QApplication::postEvent(Owner, new GCameraEvent(CAMERA_EVENT_UPDATE_BATTERY));
+				
 				QApplication::postEvent(Owner, new GCameraEvent(CAMERA_EVENT_FPS_UPDATED, QVariant(TempFPS)));
 				if (StableFPSCount == 4)
 					QApplication::postEvent(Owner, new GCameraEvent(CAMERA_EVENT_FPS_CALCULATED, QVariant((int)StableFPS)));
@@ -1159,6 +1174,36 @@ void GMyLiveThread::run()
 		free(live_buffer::frame);
 		live_buffer::frame = 0;
 	}
+}
+
+QString GMyLiveThread::getBatteryLevel()
+{
+	cmdUpdateBatteryLevel();
+	return batteryLevel;
+}
+
+void GMyLiveThread::updateBatteryLevel()
+{
+	QString ret = "error";
+#ifdef GPHOTO2
+	char* str_val = 0;
+	int err = _gp_get_config_value_string(camera, "batterylevel", &str_val, camera_context);
+	if (err >= GP_OK && str_val)
+	{
+		ret = QString(str_val);
+		if (DEBUG) fprintf(stderr, "GMyLiveThread::getBatteryLevel  battery = [%s]\n", str_val);
+	}
+	if (err == GP_ERROR_CAMERA_BUSY)	// error -110 is: I/O in progress
+	{
+		ret = QString("BUSY");
+	}
+	// http://gphoto.org/doc/api/gphoto2-result_8h.html
+	if (DEBUG) fprintf(stderr, "GMyLiveThread::getBatteryLevel  err = [%d] - [%s]\n", err, gp_result_as_string(err));
+	
+	if (str_val)
+		free(str_val);
+#endif
+	batteryLevel = ret;
 }
 
 bool GMyLiveThread::fillAvList()

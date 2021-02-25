@@ -142,6 +142,7 @@ private:
 	QSpinBox* timeTimerSpinBox;
 	QCheckBox* framesTimerBox;
 	QSpinBox* framesTimerSpinBox;
+	QLabel* batteryLevelLabel;
 	GMyLiveThread* LiveThread;
 	GAFThread* AFThread;
 	GEOSCaptureWnd* CaptureWnd;
