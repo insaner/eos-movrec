@@ -60,7 +60,7 @@ struct EOSZoomVars
 
 struct valArr
 {
-	QString *opt_name;
+	QString *opt_name = NULL;
 	int length = 0;
 };
 
@@ -74,6 +74,19 @@ struct EOSCamFeatures
 	bool HasAF;
 	
 	QString lens_name;
+	
+	// any updates to these need to also be updated in _gp_get_config_value_options_free_all
+	valArr whitebalance;
+	valArr autoexposuremode;// AE mode
+	valArr iso;				// ISO
+	valArr aperture;		// AV
+	valArr shutterspeed;	// Tv
+	valArr evfmode;			// LiveView mode (Electronic ViewFinder)
+	valArr drivemode;		// camera shutter timer
+	valArr aeb;				// exposure compensation
+	valArr eosremoterelease;// camera trigger
+	
+	valArr TEST;
 };
 
 class GMyLiveThread: public QThread
@@ -105,6 +118,8 @@ public:
 	void cmdRequestISO();
 	void cmdRequestISOList();
 	void cmdSetAv(int av, int dof);
+	void cmdRequestWB();
+	void cmdRequestWBList();
 	void cmdRequestAv();
 	void cmdRequestAvList();
 	void cmdSetTv(int tv);
@@ -177,11 +192,15 @@ private:
 	int camera_auto_focus(Camera* camera, GPContext* context, int onoff);
 	bool processCommand();
 	void updateBatteryLevel();
+	bool fillWBList();
 	bool fillAvList();
 	bool fillTvList();
 	bool fillISOList();
 	bool fillAEMList();
-	bool fillCameraName();
+	bool fillCameraInfo();
+#ifdef GPHOTO2
+	void gp_free_all();
+#endif
 private:
 	bool Stoped;
 	bool Inited;
@@ -218,9 +237,10 @@ private:
 	int ISOListSize;
 	unsigned int AEMList[16];
 	int AEMListSize;
-	int Zoom;
-	int ZoomPosX;
-	int ZoomPosY;
+	 // if we don't initialize we get warnings in valgrind (while we wait for libgphoto2 to implement zoom and zoomposition
+	int Zoom = 1;
+	int ZoomPosX = 0;
+	int ZoomPosY = 0;
 	bool WantHistogram;
 	int HistogramY[256];
 	int HistogramR[256];

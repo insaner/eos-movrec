@@ -69,7 +69,7 @@ private:
 	unsigned char* frame;
 	bool ShowLiveImage;
 	bool ShowWhiteBox;
-	int Zoom;
+	int Zoom = 1;
 	QRect ZoomRect;
 	QPoint MousePressPoint;
 	double ZPD_x, ZPD_y;

@@ -73,6 +73,7 @@ protected slots:
 	void slotShowImageChanged(int);
 	void slotOptions();
 	void slotAbout();
+	void doFocus(int nearFar, int amount);
 	void slotFocusNear3();
 	void slotFocusNear2();
 	void slotFocusNear1();
@@ -104,6 +105,9 @@ private:
 	void saveSettings();
 	void doZoomPos(QPoint qp);
 	void doZoom(int amount);
+	void populateOptionBoxes();
+	void populateOptionBox(QComboBox* box, valArr featureList, int selOpt);
+	void changeSelection(QComboBox* box, int* setting, int idx);
 private:
 	//QTimer* StartTimer;
 	QBlinkLabel* blinkLabel;

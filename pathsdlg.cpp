@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2015, 2021 by insaner                                         *
+ *   Copyright (C) 2015, 2021 by insaner                                   *
  *                                                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -110,8 +110,8 @@ GPathsDlg::GPathsDlg(QWidget* parent)
 void GPathsDlg::setFilePaths(QString newVidName, QString newImgName)
 {
 	if (DEBUG) fprintf(stderr, "GPathsDlg::setFilePaths: [%s, %s]\n",
-		newVidName.toLatin1().constData(),
-		newImgName.toLatin1().constData() );
+		newVidName.toLocal8Bit().constData(),
+		newImgName.toLocal8Bit().constData() );
 	VidName = newVidName;
 	ImgName = newImgName;
 	VidNameLabel->setText(VidName);
@@ -149,4 +149,4 @@ GPathsDlg::~GPathsDlg()
 {
 }
 
-	
+

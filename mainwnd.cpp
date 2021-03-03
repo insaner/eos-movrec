@@ -41,6 +41,10 @@
 #include <stdio.h>
 // #include "jpegwrt.h"
 
+#include "debug.h"
+#include <QDebug>
+#include <QStyleFactory>
+
 #include "mainwnd.h"
 #include "about.h"
 #include "pathsdlg.h"
@@ -72,12 +76,19 @@ GEOSRecWnd::GEOSRecWnd()
  : QWidget(0)
 {
 	setWindowTitle(tr("EOS Camera Movie Record"));
+	setWindowIcon(QIcon::fromTheme("media-record"));
+	// setWindowIcon(QIcon::fromTheme("camera-photo"));
 
 	QVBoxLayout* main_layout = new QVBoxLayout(this);
 	QHBoxLayout* btn_layout = new QHBoxLayout();
 
-			// QIcon::setThemeName("Oxygen");
-	fprintf(stderr, "themeName: %s\n", QIcon::themeName().toLatin1().constData());
+	// QIcon::setThemeName("oxygen");
+	
+	// https://openapplibrary.org/dev-tutorials/qt-icon-themes
+	// https://stackoverflow.com/questions/34417617/how-do-theme-icons-work-in-qt-creator-designer
+	if (DEBUG) fprintf(stderr, "themeName: %s\n", QIcon::themeName().toLocal8Bit().constData());
+	if (DEBUG) qDebug() << "Available QStyleFactory themes on your system = " << QStyleFactory::keys(); 
+	if (DEBUG) qDebug() << "QIcon::themeSearchPaths() = " << QIcon::themeSearchPaths();
 	
 	reconnBtn = new QToolButton(this);
 	//reconnBtn->setText(tr("R"));
@@ -105,6 +116,9 @@ GEOSRecWnd::GEOSRecWnd()
 	// cptBtn->setIcon(QPixmap(cpt_xpm));
 	// cptBtn->setIcon(QIcon::fromTheme("camera-photo"));
 	// cptBtn->setIconSize(QSize(16, 16));
+	// widget->setIcon(widget->style()->standardIcon(QStyle::SP_BrowserReload));
+	// fprintf(stderr, " has battery icon?: %d\n", QIcon::hasThemeIcon("battery"));
+	// cptBtn->setIcon(QIcon::fromTheme("battery"));
 	cptBtn->setEnabled(false);
 	cptBtn->setToolTip(tr("Take a screenshot (C)"));
 	btn_layout->addWidget(cptBtn, 0);
@@ -217,7 +231,7 @@ GEOSRecWnd::GEOSRecWnd()
 	zoom10xBtn->setText(tr("10x"));
 	zoom10xBtn->setEnabled(false);
 	zoom10xBtn->setCheckable(true);
-	zoom10xBtn->setToolTip(tr("10x Zoom (crop) (Z)"));
+	zoom10xBtn->setToolTip(tr("10x Zoom (crop) (UNIMPLEMENTED IN DRIVER)"));
 	focus_layout->addWidget(zoom10xBtn, 0);
 
 	HistBtn = new QToolButton(this);
@@ -228,11 +242,15 @@ GEOSRecWnd::GEOSRecWnd()
 	focus_layout->addWidget(HistBtn, 0);
 
 	focus_layout->addSpacing(20);
-	QLabel* wbLabel = new QLabel(tr("WB"), this);
+	QLabel* wbLabel = new QLabel(tr("WB:"), this);
 	focus_layout->addWidget(wbLabel, 0);
 
 	wbBox = new QComboBox(this);
+	wbBox->setToolTip(tr("Select white balance"));
 	wbBox->setEditable(false);
+	wbBox->setEnabled(false);
+	wbBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+#ifdef EDSDK
 	wbBox->addItem(tr("Auto"), QVariant((int)0));
 	wbBox->addItem(tr("Daylight"), QVariant((int)1));
 	wbBox->addItem(tr("Cloudy"), QVariant((int)2));
@@ -241,17 +259,17 @@ GEOSRecWnd::GEOSRecWnd()
 	wbBox->addItem(tr("Flash"), QVariant((int)5));
 	wbBox->addItem(tr("Shade"), QVariant((int)8));
 	wbBox->addItem(tr("Color Temperature"), QVariant((int)9));
-	wbBox->setToolTip(tr("Select white balance"));
+#endif
 	focus_layout->addWidget(wbBox, 0);
 
 	wbTempBox = new QSpinBox(this);
+	wbTempBox->setToolTip(tr("Select white balance temperature"));
+	wbTempBox->setEnabled(false);
 	wbTempBox->setMinimum(2800);
 	wbTempBox->setMaximum(10000);
 	wbTempBox->setValue(5200);
 	wbTempBox->setSingleStep(100);
-	wbTempBox->setEnabled(false);
 	wbTempBox->setSuffix(tr("K"));
-	wbTempBox->setToolTip(tr("Select white balance temperature"));
 	focus_layout->addWidget(wbTempBox, 0);
 
 	focus_layout->addStretch(1);
@@ -260,35 +278,39 @@ GEOSRecWnd::GEOSRecWnd()
 	
 	QHBoxLayout* cam_opts_layout = new QHBoxLayout();
 
+	QLabel* aeLabel = new QLabel(tr("AE:"), this);
+	cam_opts_layout->addWidget(aeLabel, 0);
+	
 	AEModeBox = new QComboBox(this);
+	AEModeBox->setToolTip(tr("Select AE Mode (auto exposure)"));
 	AEModeBox->setEditable(false);
 	AEModeBox->setEnabled(false);
-	AEModeBox->setToolTip(tr("Select AE Mode"));
+	AEModeBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);
 	cam_opts_layout->addWidget(AEModeBox, 0);
 
 	isoBox = new QComboBox(this);
+	isoBox->setToolTip(tr("Select ISO"));
 	isoBox->setEditable(false);
 	isoBox->setEnabled(false);
-	isoBox->setToolTip(tr("Select ISO"));
 	cam_opts_layout->addWidget(isoBox, 0);
 
 	dofBtn = new QToolButton(this);
 	dofBtn->setText("DOF");
+	dofBtn->setToolTip(tr("Enable/disable depth of field (D)"));
 	dofBtn->setCheckable(true);
 	dofBtn->setEnabled(false);
-	dofBtn->setToolTip(tr("Enable/disable depth of field (D)"));
 	cam_opts_layout->addWidget(dofBtn, 0);
 
 	avBox = new QComboBox(this);
+	avBox->setToolTip(tr("Select Aperture / AV"));
 	//avBox->setEnabled(false);
 	avBox->setEditable(false);
-	avBox->setToolTip(tr("Select AV"));
 	cam_opts_layout->addWidget(avBox, 0);
 
 	tvBox = new QComboBox(this);
+	tvBox->setToolTip(tr("Select Shutterspeed / TV"));
 	//tvBox->setEnabled(false);
 	tvBox->setEditable(false);
-	tvBox->setToolTip(tr("Select TV"));
 	cam_opts_layout->addWidget(tvBox, 0);
 	
 	cam_opts_layout->addSpacing(10);
@@ -323,6 +345,7 @@ GEOSRecWnd::GEOSRecWnd()
 	QHBoxLayout* battery_layout = new QHBoxLayout();
 	battery_layout->addWidget(new QLabel(tr("Batt: "), this), 0);
 	batteryLevelLabel = new QLabel(tr("-"), this);
+	batteryLevelLabel->setToolTip(tr("Battery level (as reported by driver)"));
 	battery_layout->addWidget(batteryLevelLabel, 0);
 
 	
@@ -416,7 +439,7 @@ GEOSRecWnd::GEOSRecWnd()
 	connect(reconnectShortcut, SIGNAL(activated()), this, SLOT(slotReconnect()));
 	connect(dofShortcut, SIGNAL(activated()), dofBtn, SLOT(click()));
 	connect(zoomShortcut, SIGNAL(activated()), zoom5xBtn, SLOT(click()));
-	connect(zoomShortcut, SIGNAL(activated()), zoom10xBtn, SLOT(click()));
+	// connect(zoomShortcut, SIGNAL(activated()), zoom10xBtn, SLOT(click()));
 	connect(captureShortcut, SIGNAL(activated()), showBox, SLOT(click()));
 
 	connect(timeTimerBox, SIGNAL(clicked(bool)), this, SLOT(slotTimeTimerSwitch(bool)));
@@ -674,12 +697,14 @@ void GEOSRecWnd::loadSettings()
 	}
 	int wb = settings.value(QString("WB"), QVariant((int)-1)).toInt();
 	for (i = 0; i < wbBox->count(); i++)
+	{
 		if (wb == wbBox->itemData(i, Qt::UserRole).toInt())
 		{
 			wbBox->setCurrentIndex(i);
 			slotWbSelected(i);
 			break;
 		}
+	}
 	int iso = settings.value(QString("ISO"), QVariant((int)-1)).toInt();
 	for (i = 0; i < isoBox->count(); i++)
 		if (iso == isoBox->itemData(i, Qt::UserRole).toInt())
@@ -741,6 +766,43 @@ EOSZoomVars GEOSRecWnd::getZoomVars()
 	return LiveThread->cameraFeatures().zoomVars;
 }
 
+void GEOSRecWnd::populateOptionBox(QComboBox* box, valArr featureList, int selOpt)
+{
+	if (!isLive())
+		return;
+#ifdef GPHOTO2
+	if (DEBUG) fprintf(stderr, "GEOSRecWnd::populateOptionBox   box [%s]  selOpt [%d]\n", box->toolTip().toLocal8Bit().constData(), selOpt );
+	
+	box->clear();
+	for (int i = 0; i < featureList.length; i++)
+	{
+		box->addItem(featureList.opt_name[i], QVariant((int)i));
+		if (DEBUG) fprintf(stderr, "    [%d] [%s]\n", i, featureList.opt_name[i].toLocal8Bit().constData() );
+		
+		if (i == selOpt)
+		{
+			box->setCurrentIndex(i);
+		}
+	}
+#endif
+}
+
+void GEOSRecWnd::changeSelection(QComboBox* box, int* setting, int idx)
+{
+	// changeSelection(isoBox, &CurrSettings.ISO, e->value().toInt());
+	*setting = idx;
+	int val;
+	for (int i = 0; i < box->count(); i++)
+	{
+		val = box->itemData(i, Qt::UserRole).toInt();
+		if (val == idx)
+		{
+			box->setCurrentIndex(i);
+			break;
+		}
+	}
+}
+
 void GEOSRecWnd::customEvent(QEvent* event)
 {
 	if (!LiveThread /*|| !LiveThread->isInit()*/)
@@ -767,16 +829,16 @@ void GEOSRecWnd::customEvent(QEvent* event)
 			QSizeF lvSize = QSizeF(features.LiveViewSize_x, features.LiveViewSize_y);
 			if (!largeSize.isEmpty() && !lvSize.isEmpty())
 				CaptureWnd->setZoomPositionDivisor(largeSize.width()/lvSize.width(), largeSize.height()/lvSize.height());
+			
 			//startBtn->setEnabled(true);
 			cptBtn->setEnabled(true);
 			AEModeBox->setEnabled(true);
 			dofBtn->setEnabled(true);
-			zoomPosClickBtn->setEnabled(true && getZoomVars().enabled);
+			zoomPosClickBtn->setEnabled(getZoomVars().enabled);
 			if (!getZoomVars().enabled)
 				zoomPosClickBtn->setToolTip(tr("Select zoom position by clicking on preview (this feature not yet enabled for your camera)"));
 			zoom5xBtn->setEnabled(true);
 			zoom10xBtn->setEnabled(true);
-			zoomPosClickBtn->setEnabled(true);
 			HistBtn->setEnabled(true);
 			showBox->setEnabled(true);
 			wbBox->setEnabled(true);
@@ -807,10 +869,6 @@ void GEOSRecWnd::customEvent(QEvent* event)
 			startBtn->setVisible(true);
 			stopBtn->setEnabled(false);
 			stopBtn->setVisible(false);
-			zoomPosClickBtn->setEnabled(true && getZoomVars().enabled);
-			zoom5xBtn->setEnabled(true);
-			zoom10xBtn->setEnabled(true);
-			zoomPosClickBtn->setEnabled(true);
 			optionsBtn->setEnabled(true);
 			timeTimerBox->setEnabled(true);
 			framesTimerBox->setEnabled(true);
@@ -821,27 +879,47 @@ void GEOSRecWnd::customEvent(QEvent* event)
 	case CAMERA_EVENT_UPDATE_BATTERY:
 		batteryLevelLabel->setText(LiveThread->getBatteryLevel());
 		break;
-	case CAMERA_EVENT_ISO_CHANGED:
+	case CAMERA_EVENT_WB_CHANGED:
 		{
-			// ISO changed
-			int iso_ind = e->value().toInt();
-			CurrSettings.ISO = iso_ind;
+			// wb changed
+			changeSelection(wbBox, &CurrSettings.Wb, e->value().toInt());
+			/*
+			int wb_ind = e->value().toInt();
+			CurrSettings.Wb = wb_ind;
 			int val;
-			for (int i = 0; i < isoBox->count(); i++)
+			for (int i = 0; i < wbBox->count(); i++)
 			{
-				val = isoBox->itemData(i, Qt::UserRole).toInt();
-				if (val == iso_ind)
+				val = wbBox->itemData(i, Qt::UserRole).toInt();
+				if (val == wb_ind)
 				{
-					isoBox->setCurrentIndex(i);
+					wbBox->setCurrentIndex(i);
 					break;
 				}
 			}
+			*/
+		}
+		break;
+	case CAMERA_EVENT_WBLIST_CHANGED:
+		{
+#ifdef EDSDK
+			fprintf(stderr, "GEOSRecWnd::customEvent     CAMERA_EVENT_WBLIST_CHANGED: not implementet yet! \n" );
+#endif
+#ifdef GPHOTO2
+			populateOptionBox(wbBox,  LiveThread->cameraFeatures().whitebalance, CurrSettings.Wb);
+#endif
+		}
+		break;
+	case CAMERA_EVENT_ISO_CHANGED:
+		{
+			// ISO changed
+			changeSelection(isoBox, &CurrSettings.ISO, e->value().toInt());
 		}
 		break;
 	case CAMERA_EVENT_ISOLIST_CHANGED:
 		{
 			// ISO list changed
 			unsigned int curr_iso = isoBox->itemData(isoBox->currentIndex(), Qt::UserRole).toInt();
+#ifdef EDSDK
 			const unsigned int* isoList = LiveThread->isoList();
 			int isoListSize = LiveThread->isoListSize();
 			// fill combo
@@ -855,34 +933,20 @@ void GEOSRecWnd::customEvent(QEvent* event)
 					isoBox->setCurrentIndex(ind);
 				ind++;
 			}
+#endif
+#ifdef GPHOTO2
+			populateOptionBox(isoBox,  LiveThread->cameraFeatures().iso, CurrSettings.ISO);
+#endif
 		}
 		break;
 	case CAMERA_EVENT_AV_CHANGED:
 		{
-			// Av changed
-			int av = e->value().toInt();
-			CurrSettings.Av = av;
-			//QString str = tr("Av changed to %1").arg(av);
-			//blinkLabel->setText(str);
-			//QMessageBox::information(this, tr("Info"), str);
-			// find in combo
-			int val;
-			for (int i = 0; i < avBox->count(); i++)
-			{
-				val = avBox->itemData(i, Qt::UserRole).toInt();
-				if (val == av)
-				{
-					avBox->setCurrentIndex(i);
-					break;
-				}
-			}
+			changeSelection(avBox, &CurrSettings.Av, e->value().toInt());
 		}
 		break;
 	case CAMERA_EVENT_AVLIST_CHANGED:
 		{
-			// Av list changed
-			//QMessageBox::information(this, tr("Info"), tr("Av list changed."));
-			//blinkLabel->setText(tr("Av list changed."));
+#ifdef EDSDK
 			unsigned int curr_av = avBox->itemData(avBox->currentIndex(), Qt::UserRole).toInt();
 			const unsigned int* avList = LiveThread->avList();
 			int avListSize = LiveThread->avListSize();
@@ -897,34 +961,21 @@ void GEOSRecWnd::customEvent(QEvent* event)
 					avBox->setCurrentIndex(ind);
 				ind++;
 			}
+#endif
+#ifdef GPHOTO2
+			populateOptionBox(avBox,  LiveThread->cameraFeatures().aperture, CurrSettings.Av);
+#endif
 		}
 		break;
 	case CAMERA_EVENT_TV_CHANGED:
 		{
 			// Tv changed
-			int tv = e->value().toInt();
-			CurrSettings.Tv = tv;
-			//QString str = tr("Tv changed to %1").arg(tv);
-			//blinkLabel->setText(str);
-			//QMessageBox::information(this, tr("Info"), str);
-			// find in combo
-			int val;
-			for (int i = 0; i < tvBox->count(); i++)
-			{
-				val = tvBox->itemData(i, Qt::UserRole).toInt();
-				if (val == tv)
-				{
-					tvBox->setCurrentIndex(i);
-					break;
-				}
-			}
+			changeSelection(tvBox, &CurrSettings.Tv, e->value().toInt());
 		}
 		break;
 	case CAMERA_EVENT_TVLIST_CHANGED:
 		{
-			// Tv list changed
-			//QMessageBox::information(this, tr("Info"), tr("Tv list changed."));
-			//blinkLabel->setText(tr("Tv list changed."));
+#ifdef EDSDK
 			unsigned int curr_tv = tvBox->itemData(tvBox->currentIndex(), Qt::UserRole).toInt();
 			const unsigned int* tvList = LiveThread->tvList();
 			int tvListSize = LiveThread->tvListSize();
@@ -939,29 +990,11 @@ void GEOSRecWnd::customEvent(QEvent* event)
 					tvBox->setCurrentIndex(ind);
 				ind++;
 			}
+#endif
+#ifdef GPHOTO2
+			populateOptionBox(tvBox,  LiveThread->cameraFeatures().shutterspeed, CurrSettings.Tv);
+#endif
 		}
-		break;
-	case CAMERA_EVENT_FPS_UPDATED:
-		{
-			double fps = e->value().toDouble();
-			char str[10];
-			sprintf(str, "%.1f fps", fps);
-			fpsLabel->setText(QString(str));
-		}
-		break;
-	case CAMERA_EVENT_UPDATE_COUNTERS:
-		{
-			QList<QVariant> counters = e->value().toList();
-			if (counters.length() == 2)
-			{
-				framesLabel->setText(tr("frames: %1").arg(counters.at(0).toInt()));
-				timeLabel->setText(tr("time: %1 s").arg(counters.at(1).toInt()));
-			}
-		}
-		break;
-	case CAMERA_EVENT_FPS_CALCULATED:
-		cptBtn->setEnabled(true);
-		startBtn->setEnabled(true);
 		break;
 	case CAMERA_EVENT_AEMODE_CHANGED:
 		{
@@ -1022,17 +1055,17 @@ void GEOSRecWnd::customEvent(QEvent* event)
 				LiveThread->cmdRequestAvList();
 				LiveThread->cmdRequestTvList();
 				LiveThread->cmdRequestISOList();
+				LiveThread->cmdRequestWBList();
 				LiveThread->cmdRequestAv();
 				LiveThread->cmdRequestTv();
 				LiveThread->cmdRequestISO();
+				LiveThread->cmdRequestWB();
 			}
 		}
 		break;
 	case CAMERA_EVENT_AEMODELIST_CHANGED:
 		{
-			// AEMODE list changed
-			//QMessageBox::information(this, tr("Info"), tr("AEMODE list changed."));
-			//blinkLabel->setText(tr("AEMODE list changed."));
+#ifdef EDSDK
 			unsigned int curr_aem = AEModeBox->itemData(AEModeBox->currentIndex(), Qt::UserRole).toInt();
 			const unsigned int* aemList = LiveThread->aemList();
 			int aemListSize = LiveThread->aemListSize();
@@ -1047,12 +1080,15 @@ void GEOSRecWnd::customEvent(QEvent* event)
 					AEModeBox->setCurrentIndex(ind);
 				ind++;
 			}
+#endif
+#ifdef GPHOTO2
+			populateOptionBox(AEModeBox,  LiveThread->cameraFeatures().autoexposuremode, CurrSettings.AEMode);
+#endif
 		}
 		break;
 	case CAMERA_EVENT_AFMODE_CHANGED:
 		{
 			int mode = e->value().toInt();
-			//blinkLabel->setText(tr("AE Mode changed to %1").arg(mode));
 			switch (mode)
 			{
 			case 0:
@@ -1068,7 +1104,7 @@ void GEOSRecWnd::customEvent(QEvent* event)
 				if (features.HasAF)
 					AFCamBtn->setEnabled(true);
 				break;
-			case 3:
+			case 3:	// NOTE: if you change this 3 to something else, you must also change the 3 in COMMAND_REQ_AFMODE in livethread.cpp
 				focusNear3Btn->setEnabled(false);
 				focusNear2Btn->setEnabled(false);
 				focusNear1Btn->setEnabled(false);
@@ -1084,11 +1120,30 @@ void GEOSRecWnd::customEvent(QEvent* event)
 			}
 		}
 		break;
-	case CAMERA_EVENT_ZOOM_CHANGED_STOP:
-		slotStop();
-		blinkLabel->setText(tr("Can't continue write when zoom changed!"));
+	case CAMERA_EVENT_FPS_UPDATED:
+		{
+			double fps = e->value().toDouble();
+			char str[10];
+			sprintf(str, "%.1f fps", fps);
+			fpsLabel->setText(QString(str));
+		}
 		break;
-	// from capture windows
+	case CAMERA_EVENT_UPDATE_COUNTERS:
+		{
+			QList<QVariant> counters = e->value().toList();
+			if (counters.length() == 2)
+			{
+				framesLabel->setText(tr("frames: %1").arg(counters.at(0).toInt()));
+				timeLabel->setText(tr("time: %1 s").arg(counters.at(1).toInt()));
+			}
+		}
+		break;
+	case CAMERA_EVENT_FPS_CALCULATED:
+		cptBtn->setEnabled(true);
+		startBtn->setEnabled(true);
+		break;
+	case CAMERA_EVENT_ZOOM_CHANGED_STOP:
+		break;
 	case CAMERA_EVENT_ZOOMPOS_NEEDCHANGE:
 		if (LiveThread)
 		{
@@ -1118,13 +1173,13 @@ void GEOSRecWnd::customEvent(QEvent* event)
 		}
 		break;
 	case CAMERA_EVENT_SHUTDOWN:
-		// thread say about camera shutdow
 		blinkLabel->setText(tr("Lost connection with camera."));
 		blinkLabel->start();
 		shutdown();
 		QMessageBox::critical(this, tr("Error"), tr("Lost connection with camera."));
 		break;
 	default:
+		if (DEBUG) fprintf(stderr, " DEFAULT ");
 		break;
 	}
 	e->accept();
@@ -1138,9 +1193,12 @@ void GEOSRecWnd::setPathLabel()
 	QFontMetrics metrics(path_label->font());
 	path_label->setText("[" + metrics.elidedText(commonFilePath, Qt::ElideMiddle, path_label->width() - 10) + "]");
 	
-	QString cmpIMGpath = QFileInfo(CurrSettings.ImgName).path().toLatin1().constData();
+	QString cmpIMGpath = QFileInfo(CurrSettings.ImgName).path().toLocal8Bit().constData();
 	if (cmpIMGpath != commonFilePath)
 	{
+		if (DEBUG) fprintf(stderr, "GEOSRecWnd::derivePath: PATHS DO NOT MATCH: [%s] != [%s]\n",
+				commonFilePath.toLocal8Bit().constData(),
+				cmpIMGpath.toLocal8Bit().constData() );
 		path_label->setToolTip("VID PATH: [" + commonFilePath + "]\nCPT PATH: [" + cmpIMGpath + "]");
 		path_label->setText(" * [" + metrics.elidedText(commonFilePath, Qt::ElideMiddle, path_label->width() - 10) + "]");
 	}
@@ -1148,7 +1206,7 @@ void GEOSRecWnd::setPathLabel()
 
 void GEOSRecWnd::derivePath()
 {
-	commonFilePath = QFileInfo(CurrSettings.VidName).path().toLatin1().constData(); // FIXME for i18n, this should be a QSTRING
+	commonFilePath = QFileInfo(CurrSettings.VidName).path().toLocal8Bit().constData(); // FIXME for i18n, this should be a QSTRING
 }
 
 void GEOSRecWnd::slotSettings()
@@ -1204,10 +1262,6 @@ fprintf(stderr, "GEOSRecWnd::slotStart: FIXME -- CHECK for no filename (error)\n
 		startBtn->setVisible(false);
 		stopBtn->setEnabled(true);
 		stopBtn->setVisible(true);
-		zoomPosClickBtn->setEnabled(false);
-		zoom5xBtn->setEnabled(false);
-		zoom10xBtn->setEnabled(false);
-		zoomPosClickBtn->setEnabled(false);
 		optionsBtn->setEnabled(false);
 		if (timeTimerBox->isChecked())
 			LiveThread->setTimeTimer(timeTimerSpinBox->value()*1000);
@@ -1219,10 +1273,10 @@ fprintf(stderr, "GEOSRecWnd::slotStart: FIXME -- CHECK for no filename (error)\n
 			LiveThread->setFramesTimer(-1);
 		/*char info[48];
 		sprintf(info, "AEMODE %s; ISO %s; AV %s; TV %s",
-			AEModeBox->currentText().toLatin1().data(),
-			isoBox->currentText().toLatin1().data(),
-			avBox->currentText().toLatin1().data(),
-			tvBox->currentText().toLatin1().data());*/
+			AEModeBox->currentText().toLocal8Bit().data(),
+			isoBox->currentText().toLocal8Bit().data(),
+			avBox->currentText().toLocal8Bit().data(),
+			tvBox->currentText().toLocal8Bit().data());*/
 		QString aemode = AEModeBox->currentText();
 		QString info = QString("AE: %1").arg(aemode);
 		if (aemode == "M" || aemode == "Manual" || aemode == "TV" || aemode == "Tv")
@@ -1236,10 +1290,12 @@ fprintf(stderr, "GEOSRecWnd::slotStart: FIXME -- CHECK for no filename (error)\n
 		}
 		info.replace(".", ",");
 		LiveThread->setMovieInfo(info.toLatin1().data());
+		// LiveThread->setMovieInfo(info.toLocal8Bit().data()); // <-- FIXME should probably be this instead
 		timeTimerBox->setEnabled(false);
 		timeTimerSpinBox->setEnabled(false);
 		framesTimerBox->setEnabled(false);
 		framesTimerSpinBox->setEnabled(false);
+		if (DEBUG) fprintf(stderr, "GEOSRecWnd::slotStart  -- BEGIN RECORDING!\n");
 		LiveThread->startWrite();
 		blinkLabel->setText(tr("WRITING"));
 		blinkLabel->start();
@@ -1319,7 +1375,9 @@ void GEOSRecWnd::slotWbSelected(int wb_ind)
 {
 	bool ok = false;
 	int wb = wbBox->itemData(wb_ind, Qt::UserRole).toInt(&ok);
-	if (wb == 9)		// Color Temperature
+	
+		// FIXME: check if the last option will always be manual select
+	if (wbBox->currentIndex() + 1 == wbBox->count())		//  Manually select Color Temperature
 	{
 		wbTempBox->setEnabled(true);
 	}
@@ -1327,7 +1385,7 @@ void GEOSRecWnd::slotWbSelected(int wb_ind)
 	{
 		wbTempBox->setEnabled(false);
 	}
-	// set to camera
+	
 	if (LiveThread && LiveThread->isInit() && ok)
 	{
 		LiveThread->cmdSetWB(wb, wbTempBox->value());
@@ -1337,66 +1395,51 @@ void GEOSRecWnd::slotWbSelected(int wb_ind)
 
 void GEOSRecWnd::slotWbTempSelected(int wb_temp)
 {
-	// set to camera
 	if (LiveThread && LiveThread->isInit())
 	{
-		LiveThread->cmdSetWB(9, wb_temp);
+			// FIXME: check if the last option will always be manual select
+		LiveThread->cmdSetWB(wbBox->count() - 1, wb_temp);
+		//LiveThread->cmdSetWB(9, wb_temp);
 		CurrSettings.WbTemp = wb_temp;
+	}
+}
+
+void GEOSRecWnd::doFocus(int nearFar, int amount)
+{
+	if (LiveThread && LiveThread->isInit())
+	{
+		LiveThread->cmdAdjFocus(nearFar, amount);
 	}
 }
 
 void GEOSRecWnd::slotFocusNear3()
 {
-	// send command to camera
-	if (LiveThread && LiveThread->isInit())
-	{
-		LiveThread->cmdAdjFocus(0, 3);
-	}
+	doFocus(0, 3);
 }
 
 void GEOSRecWnd::slotFocusNear2()
 {
-	// send command to camera
-	if (LiveThread && LiveThread->isInit())
-	{
-		LiveThread->cmdAdjFocus(0, 2);
-	}
+	doFocus(0, 2);
 }
 
 void GEOSRecWnd::slotFocusNear1()
 {
-	// send command to camera
-	if (LiveThread && LiveThread->isInit())
-	{
-		LiveThread->cmdAdjFocus(0, 1);
-	}
+	doFocus(0, 1);
 }
 
 void GEOSRecWnd::slotFocusFar1()
 {
-	// send command to camera
-	if (LiveThread && LiveThread->isInit())
-	{
-		LiveThread->cmdAdjFocus(1, 1);
-	}
+	doFocus(1, 1);
 }
 
 void GEOSRecWnd::slotFocusFar2()
 {
-	// send command to camera
-	if (LiveThread && LiveThread->isInit())
-	{
-		LiveThread->cmdAdjFocus(1, 2);
-	}
+	doFocus(1, 2);
 }
 
 void GEOSRecWnd::slotFocusFar3()
 {
-	// send command to camera
-	if (LiveThread && LiveThread->isInit())
-	{
-		LiveThread->cmdAdjFocus(1, 3);
-	}
+	doFocus(1, 3);
 }
 
 void GEOSRecWnd::slotZoomPosClick()
@@ -1624,13 +1667,13 @@ QString GEOSRecWnd::getNextfName(const QString& fName)
  
 	if (QFileInfo(retname).isRelative())
 	{
-		retname = QFileInfo(commonFilePath, fName).absoluteFilePath().toAscii().constData();
+		retname = QFileInfo(commonFilePath, fName).absoluteFilePath();
 	}
  
-	// QString path = QFileInfo(retname).absoluteFilePath().toAscii().constData();
-	QString path = QFileInfo(retname).path().toAscii().constData();
-	QString base = QFileInfo(retname).completeBaseName().toAscii().constData();
-	QString ext  = QFileInfo(retname).suffix().toAscii().constData();
+	// QString path = QFileInfo(retname).absoluteFilePath();
+	QString path = QFileInfo(retname).path();
+	QString base = QFileInfo(retname).completeBaseName();
+	QString ext  = QFileInfo(retname).suffix();
  
 	QFileInfo fi(retname);
 	int i=0;
@@ -1640,33 +1683,12 @@ QString GEOSRecWnd::getNextfName(const QString& fName)
 		//retname = QString("%1/%2_%3.%4").arg(path).arg(base).arg(i,3,10,QChar('0')).arg(ext);
 		fi.setFile(retname);
 		if (i >= MAX_FILENAME_ATTEMPTS) {
-			fprintf(stderr, "GEOSRecWnd::getNextfName: giving up after [%d] tries\n", i);
+			fprintf(stderr, "Could not create filename. Giving up after [%d] tries.\n", i);		// FIXME -- find a better strategy than this
 			retname = "";
 			break;
 			}
 		i++;
 	}
-		/*
-		if( access( retname.toAscii().constData(), F_OK ) != -1 ) {
-			for (int i=0; i< 999; i++) {
-				
-				// retname = (char*) malloc(str_size); // +1 for the terminating char
-				// sprintf(retname, "%s_%03d%s", fname_p, i, f_ext);
-				retname = path + base + "_" + QString(i) + ext;
-				// fprintf(stderr, "trying filename: [%s] size [%d]\n", retname, strlen(retname));
-				fprintf(stderr, "trying filename: [%s]\n", retname.toAscii().constData());
-				if ( access( retname.toAscii().constData(), F_OK ) != -1 ) {
-					fprintf(stderr, "=== taken..\n");
-					//sprintf(retname, "");
-					retname = "";
-					// free(retname);
-					}	// file doesn't exist
-				else {
-					fprintf(stderr, "=== available!\n");
-					break;
-					}
-				}
-			} // */
 	return retname;
 }
 

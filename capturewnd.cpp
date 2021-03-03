@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include "debug.h"
+
 #include "capturewnd.h"
 #include "buffer.h"
 #include "events.h"
@@ -43,6 +45,7 @@ GEOSCaptureWnd::GEOSCaptureWnd(QWidget* parent)
 	ZoomRectMoving = false;
 	FocusArea = 0;
 	ZPD_x = ZPD_y = 5.0;
+	ZoomRect = QRect();
 }
 
 GEOSCaptureWnd::~GEOSCaptureWnd()
