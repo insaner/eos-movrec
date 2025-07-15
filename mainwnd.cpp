@@ -76,9 +76,9 @@ GEOSRecWnd::GEOSRecWnd()
  : QWidget(0)
 {
 	setWindowTitle(tr("EOS Camera Movie Record"));
-	setWindowIcon(QIcon::fromTheme("media-record"));
+	//setWindowIcon(QIcon::fromTheme("media-record"));
 	// setWindowIcon(QIcon::fromTheme("camera-photo"));
-
+	setWindowIcon(QIcon(":/eos-movrec2.ico"));
 	QVBoxLayout* main_layout = new QVBoxLayout(this);
 	QHBoxLayout* btn_layout = new QHBoxLayout();
 
@@ -1233,11 +1233,11 @@ void GEOSRecWnd::slotCPT()
 	if (LiveThread && LiveThread->isInit()) {
 		QString availImgName = getNextfName(CurrSettings.ImgName);
 		if (availImgName != "") {
-			LiveThread->setImgFileName(availImgName.toAscii().constData());
+			LiveThread->setImgFileName(availImgName.toLatin1().constData());
 			LiveThread->cmdDoCPT();
 			// path_label->setText(tr("saved image: [") + CurrSettings.ImgName +tr("]"));
 			// path_label->setText("captured: [" + availImgName + "]");
-			fprintf(stderr, "Captured image: [%s]\n", availImgName.toAscii().constData());
+			fprintf(stderr, "Captured image: [%s]\n", availImgName.toLatin1().constData());
 			}
 		else {
 			fprintf(stderr, "could not set img filename!\n");
@@ -1740,7 +1740,7 @@ QString GEOSRecWnd::giveNextName(const QString& path)
 
 void GEOSRecWnd::wheelEvent(QWheelEvent* event)
 {
-	int d =  (event->delta()/120)*10;
+	int d =  (event->angleDelta().y()/120)*10;
 		
 	if (d < 0) { // scroll down
 		if( event->modifiers() & Qt::ShiftModifier ) {

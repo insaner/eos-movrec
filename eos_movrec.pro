@@ -47,3 +47,4 @@ INCLUDEPATH = $$EDSDKPATH/Header
 LIBS += -L$$EDSDKPATH/Library \
 	-ledsdk
 win32:RC_FILE = eos_movrec.rc
+RESOURCES += resources.qrc
