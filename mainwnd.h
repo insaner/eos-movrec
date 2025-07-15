@@ -108,6 +108,7 @@ private:
 	void populateOptionBoxes();
 	void populateOptionBox(QComboBox* box, valArr featureList, int selOpt);
 	void changeSelection(QComboBox* box, int* setting, int idx);
+	void setBatteryLevelLabel(QLabel* batteryLevelLabel, QString batteryLevelStr);
 private:
 	//QTimer* StartTimer;
 	QBlinkLabel* blinkLabel;
@@ -146,6 +147,7 @@ private:
 	QSpinBox* timeTimerSpinBox;
 	QCheckBox* framesTimerBox;
 	QSpinBox* framesTimerSpinBox;
+	QLabel* batteryLevelIcon;
 	QLabel* batteryLevelLabel;
 	GMyLiveThread* LiveThread;
 	GAFThread* AFThread;

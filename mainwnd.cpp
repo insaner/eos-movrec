@@ -117,8 +117,6 @@ GEOSRecWnd::GEOSRecWnd()
 	// cptBtn->setIcon(QIcon::fromTheme("camera-photo"));
 	// cptBtn->setIconSize(QSize(16, 16));
 	// widget->setIcon(widget->style()->standardIcon(QStyle::SP_BrowserReload));
-	// fprintf(stderr, " has battery icon?: %d\n", QIcon::hasThemeIcon("battery"));
-	// cptBtn->setIcon(QIcon::fromTheme("battery"));
 	cptBtn->setEnabled(false);
 	cptBtn->setToolTip(tr("Take a screenshot (C)"));
 	btn_layout->addWidget(cptBtn, 0);
@@ -343,8 +341,19 @@ GEOSRecWnd::GEOSRecWnd()
 	timer_layout->addStretch(1);
 
 	QHBoxLayout* battery_layout = new QHBoxLayout();
-	battery_layout->addWidget(new QLabel(tr("Batt: "), this), 0);
-	batteryLevelLabel = new QLabel(tr("-"), this);
+
+	if (QIcon::hasThemeIcon("battery")) {
+		batteryLevelIcon = new QLabel("", this);
+		QPixmap batteryIcon = QIcon::fromTheme("battery").pixmap(16, 16);
+		batteryLevelIcon->setPixmap(batteryIcon);
+		batteryLevelIcon->setToolTip(tr("Battery level: "));
+		battery_layout->addWidget(batteryLevelIcon, 0);
+		}
+	else {
+		battery_layout->addWidget(new QLabel(tr("Batt: "), this), 0);
+		}
+
+	batteryLevelLabel = new QLabel("-", this);
 	batteryLevelLabel->setToolTip(tr("Battery level (as reported by driver)"));
 	battery_layout->addWidget(batteryLevelLabel, 0);
 
@@ -803,6 +812,39 @@ void GEOSRecWnd::changeSelection(QComboBox* box, int* setting, int idx)
 	}
 }
 
+void GEOSRecWnd::setBatteryLevelLabel(QLabel* batteryLevelLabel, QString batteryLevelStr)
+{
+	batteryLevelLabel->setText(batteryLevelStr);
+
+	QString batteryLevel_tmp = batteryLevelStr.trimmed(); // Remove leading/trailing whitespace
+	if (batteryLevel_tmp.endsWith("%")) {
+		batteryLevel_tmp.chop(1); // Remove the last character (the '%')
+	}
+
+	bool ok;
+	int batteryLevel = batteryLevel_tmp.toInt(&ok);
+	if (!ok)
+	{
+		batteryLevelLabel->setStyleSheet("QLabel { color: red;}"); // red
+	}
+	else
+	{
+		if (batteryLevel < 30)
+		{
+			batteryLevelLabel->setStyleSheet("QLabel { color: red;}"); // red
+		}
+		else if (batteryLevel < 80)
+		{
+			batteryLevelLabel->setStyleSheet("QLabel { color: #a60;}"); // orange
+		}
+		else
+		{
+			batteryLevelLabel->setStyleSheet("QLabel { color: green;}"); // green
+			//batteryLevelLabel->setStyleSheet("");  // default style
+		}
+	}
+}
+
 void GEOSRecWnd::customEvent(QEvent* event)
 {
 	if (!LiveThread /*|| !LiveThread->isInit()*/)
@@ -855,7 +897,8 @@ void GEOSRecWnd::customEvent(QEvent* event)
 			loadSettings();
 			LiveThread->setUseStabFPS(CurrSettings.UseStabFPS);
 			CaptureWnd->setShowWhiteBox(CurrSettings.ShowWhiteBox);
-			batteryLevelLabel->setText(LiveThread->getBatteryLevel());
+			//batteryLevelLabel->setText(LiveThread->getBatteryLevel());
+			setBatteryLevelLabel(batteryLevelLabel, LiveThread->getBatteryLevel());
 		}
 		break;
 	case CAMERA_EVENT_WRITE_STOPPED:
@@ -877,7 +920,8 @@ void GEOSRecWnd::customEvent(QEvent* event)
 		}
 		break;
 	case CAMERA_EVENT_UPDATE_BATTERY:
-		batteryLevelLabel->setText(LiveThread->getBatteryLevel());
+		//batteryLevelLabel->setText(LiveThread->getBatteryLevel());
+		setBatteryLevelLabel(batteryLevelLabel, LiveThread->getBatteryLevel());
 		break;
 	case CAMERA_EVENT_WB_CHANGED:
 		{
