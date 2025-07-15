@@ -19,7 +19,7 @@ View current settings, and information including the battery level.
 
 ## How to compile:
 
-	Requirements
+### Requirements
 
 ```
 cmake-2.6.2
